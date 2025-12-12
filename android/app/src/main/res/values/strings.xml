@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GE\'EZ music</string>
+    <string name="title_activity_main">GE\'EZ music</string>
+    <string name="package_name">com.geez.music</string>
+    <string name="custom_url_scheme">com.geez.music</string>
+</resources>

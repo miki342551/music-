@@ -1,0 +1,244 @@
+/* TrackList Styles */
+.track-list {
+    width: 100%;
+}
+
+.track-list-empty {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--text-muted);
+}
+
+/* Header */
+.track-list-header {
+    display: grid;
+    grid-template-columns: 50px 1fr auto;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.track-list-header.with-album {
+    grid-template-columns: 50px 1fr 1fr auto;
+}
+
+/* Track Item */
+.track-list-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.track-item {
+    display: grid;
+    grid-template-columns: 50px 1fr auto;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    transition: all var(--transition-fast);
+    cursor: default;
+}
+
+.track-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.track-item.active {
+    background: var(--bg-elevated);
+}
+
+/* Columns */
+.track-col {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.track-col.index {
+    justify-content: center;
+    position: relative;
+}
+
+.track-number {
+    font-size: var(--font-size-md);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.track-item:hover .track-number {
+    display: none;
+}
+
+.track-play-btn {
+    display: none;
+    color: var(--text-primary);
+    padding: 0;
+}
+
+.track-item:hover .track-play-btn {
+    display: flex;
+}
+
+.track-item.active .track-number {
+    display: none;
+}
+
+.track-item.active .track-play-btn {
+    display: flex;
+    color: var(--primary);
+}
+
+/* Title Column */
+.track-col.title {
+    gap: var(--spacing-md);
+}
+
+.track-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.track-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.track-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.track-title {
+    font-size: var(--font-size-md);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-title.playing {
+    color: var(--primary);
+}
+
+.track-artist {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Album Column */
+.track-col.album span {
+    font-size: var(--font-size-md);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Duration Column */
+.track-col.duration {
+    gap: var(--spacing-md);
+}
+
+.track-like-btn {
+    color: var(--text-muted);
+    opacity: 0;
+    transition: all var(--transition-fast);
+}
+
+.track-item:hover .track-like-btn {
+    opacity: 1;
+}
+
+.track-like-btn:hover {
+    color: var(--text-primary);
+    transform: scale(1.1);
+}
+
+.track-like-btn.liked {
+    color: var(--primary);
+    opacity: 1;
+}
+
+.track-duration {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    min-width: 45px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.track-more-btn {
+    color: var(--text-muted);
+    opacity: 0;
+    transition: all var(--transition-fast);
+}
+
+.track-item:hover .track-more-btn {
+    opacity: 1;
+}
+
+.track-more-btn:hover {
+    color: var(--text-primary);
+}
+
+/* Equalizer Animation */
+.equalizer {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 16px;
+}
+
+.equalizer span {
+    width: 3px;
+    background: var(--primary);
+    border-radius: 1px;
+    animation: equalizer 0.8s infinite ease-in-out;
+}
+
+.equalizer span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.equalizer span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.equalizer span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .track-list-header {
+        display: none;
+    }
+
+    .track-item {
+        grid-template-columns: 1fr auto;
+    }
+
+    .track-col.index {
+        display: none;
+    }
+
+    .track-col.album {
+        display: none;
+    }
+
+    .track-like-btn,
+    .track-more-btn {
+        display: none;
+    }
+}
