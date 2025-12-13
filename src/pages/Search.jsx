@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import { searchTracks } from '../services/musicApi'
 import TrackList from '../components/TrackList/TrackList'
 import Skeleton from '../components/Skeleton/Skeleton'
@@ -7,8 +6,9 @@ import './Pages.css'
 
 const Icons = {
     Search: () => (
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M10.533 1.279c-5.18 0-9.407 4.14-9.407 9.279s4.226 9.279 9.407 9.279c2.234 0 4.29-.77 5.907-2.058l4.353 4.353a1 1 0 1 0 1.414-1.414l-4.344-4.344a9.157 9.157 0 0 0 2.077-5.816c0-5.14-4.226-9.28-9.407-9.28zm-7.407 9.279c0-4.006 3.302-7.28 7.407-7.28s7.407 3.274 7.407 7.28-3.302 7.279-7.407 7.279-7.407-3.273-7.407-7.28z" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
     )
 }
@@ -29,8 +29,8 @@ const genres = [
 ]
 
 function Search() {
-    const [searchParams, setSearchParams] = useSearchParams()
-    const query = searchParams.get('q') || ''
+    const [query, setQuery] = useState('')
+    const [inputValue, setInputValue] = useState('')
     const [results, setResults] = useState([])
     const [loading, setLoading] = useState(false)
 
@@ -47,50 +47,89 @@ function Search() {
         setLoading(false)
     }
 
+    const handleSearchSubmit = (e) => {
+        e.preventDefault()
+        if (inputValue.trim()) {
+            setQuery(inputValue.trim())
+        }
+    }
+
     const handleGenreClick = (genreQuery) => {
-        setSearchParams({ q: genreQuery })
+        setQuery(genreQuery)
+        setInputValue(genreQuery)
+    }
+
+    const clearSearch = () => {
+        setQuery('')
+        setInputValue('')
+        setResults([])
     }
 
     return (
-        <div className="page search-page">
+        <div className="aero-page">
+            {/* Search Bar */}
+            <form className="aero-search-bar" onSubmit={handleSearchSubmit}>
+                <div className="aero-search-icon">
+                    <Icons.Search />
+                </div>
+                <input
+                    type="text"
+                    placeholder="What do you want to listen to?"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    className="aero-search-input"
+                />
+                {inputValue && (
+                    <button type="button" className="aero-search-clear" onClick={clearSearch}>
+                        ✕
+                    </button>
+                )}
+            </form>
+
             {!query ? (
                 <>
-                    <section className="section">
-                        <h1 className="heading-2">Browse All</h1>
-                        <div className="genres-grid">
-                            {genres.map((genre, index) => (
+                    <section className="aero-section">
+                        <h2 className="aero-section-title">Browse Genres</h2>
+                        <div className="aero-genres-grid">
+                            {genres.map((genre) => (
                                 <button
-                                    key={index}
-                                    className="genre-card"
-                                    style={{ backgroundColor: genre.color }}
+                                    key={genre.name}
+                                    className="aero-genre-card"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${genre.color}dd, ${genre.color}88)`,
+                                        boxShadow: `0 4px 20px ${genre.color}40`
+                                    }}
                                     onClick={() => handleGenreClick(genre.query)}
                                 >
-                                    <span>{genre.name}</span>
+                                    {genre.name}
                                 </button>
                             ))}
                         </div>
                     </section>
                 </>
             ) : (
-                <>
-                    <section className="section">
-                        <h1 className="heading-2">
-                            Results for "{query}"
-                        </h1>
+                <section className="aero-section">
+                    <div className="aero-search-header">
+                        <h2 className="aero-section-title">Results for "{query}"</h2>
+                        <button className="aero-clear-btn" onClick={clearSearch}>
+                            Clear
+                        </button>
+                    </div>
 
-                        {loading ? (
-                            <Skeleton type="track" count={8} />
-                        ) : results.length > 0 ? (
-                            <TrackList tracks={results} />
-                        ) : (
-                            <div className="empty-state">
-                                <Icons.Search />
-                                <h3>No results found</h3>
-                                <p>Try different keywords or browse by genre</p>
-                            </div>
-                        )}
-                    </section>
-                </>
+                    {loading ? (
+                        <div className="aero-skeleton-list">
+                            {[...Array(6)].map((_, i) => (
+                                <Skeleton key={i} height={64} />
+                            ))}
+                        </div>
+                    ) : results.length > 0 ? (
+                        <TrackList tracks={results} />
+                    ) : (
+                        <div className="aero-empty-state">
+                            <p>No results found</p>
+                        </div>
+                    )}
+                </section>
             )}
         </div>
     )

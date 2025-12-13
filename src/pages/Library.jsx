@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useLibraryStore } from '../store/libraryStore'
 import { usePlayerStore } from '../store/playerStore'
 import TrackList from '../components/TrackList/TrackList'
@@ -17,7 +16,7 @@ const Icons = {
         </svg>
     ),
     Music: () => (
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
         </svg>
     )
@@ -26,8 +25,8 @@ const Icons = {
 function Library() {
     const { likedSongs, playlists } = useLibraryStore()
     const { setQueue } = usePlayerStore()
-    const navigate = useNavigate()
     const [activeTab, setActiveTab] = useState('liked')
+    const [selectedPlaylist, setSelectedPlaylist] = useState(null)
 
     const handlePlayAll = () => {
         if (likedSongs.length > 0) {
@@ -35,20 +34,63 @@ function Library() {
         }
     }
 
-    return (
-        <div className="page library-page">
-            <section className="section">
-                <h1 className="heading-2">Your Library</h1>
+    const handlePlaylistClick = (playlist) => {
+        setSelectedPlaylist(playlist)
+    }
 
-                <div className="library-tabs">
+    const handleBackFromPlaylist = () => {
+        setSelectedPlaylist(null)
+    }
+
+    // Show selected playlist
+    if (selectedPlaylist) {
+        return (
+            <div className="aero-page">
+                <button className="aero-clear-btn" onClick={handleBackFromPlaylist} style={{ marginBottom: 16 }}>
+                    ← Back to Library
+                </button>
+                <div className="aero-library-header">
+                    <div className="aero-library-icon">
+                        {selectedPlaylist.imageUrl ? (
+                            <img src={selectedPlaylist.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
+                        ) : '🎵'}
+                    </div>
+                    <div className="aero-library-info">
+                        <h2>{selectedPlaylist.name}</h2>
+                        <p>{selectedPlaylist.tracks.length} songs</p>
+                    </div>
                     <button
-                        className={`tab ${activeTab === 'liked' ? 'active' : ''}`}
+                        className="aero-play-btn-sm"
+                        onClick={() => selectedPlaylist.tracks.length > 0 && setQueue(selectedPlaylist.tracks, 0)}
+                    >
+                        <Icons.Play />
+                    </button>
+                </div>
+                {selectedPlaylist.tracks.length > 0 ? (
+                    <TrackList tracks={selectedPlaylist.tracks} />
+                ) : (
+                    <div className="aero-empty-state">
+                        <p>No songs in this playlist</p>
+                    </div>
+                )}
+            </div>
+        )
+    }
+
+    return (
+        <div className="aero-page">
+            <section className="aero-section">
+                <h2 className="aero-section-title">Your Library</h2>
+
+                <div className="aero-library-tabs">
+                    <button
+                        className={`aero-library-tab ${activeTab === 'liked' ? 'active' : ''}`}
                         onClick={() => setActiveTab('liked')}
                     >
                         Liked Songs
                     </button>
                     <button
-                        className={`tab ${activeTab === 'playlists' ? 'active' : ''}`}
+                        className={`aero-library-tab ${activeTab === 'playlists' ? 'active' : ''}`}
                         onClick={() => setActiveTab('playlists')}
                     >
                         Playlists
@@ -59,25 +101,22 @@ function Library() {
                     <>
                         {likedSongs.length > 0 ? (
                             <>
-                                <div className="library-header-card liked-header">
-                                    <div className="liked-header-bg">
-                                        <Icons.Heart />
+                                <div className="aero-library-header">
+                                    <div className="aero-library-icon">❤️</div>
+                                    <div className="aero-library-info">
+                                        <h2>Liked Songs</h2>
+                                        <p>{likedSongs.length} songs</p>
                                     </div>
-                                    <div className="liked-header-content">
-                                        <span className="liked-label">Playlist</span>
-                                        <h2 className="heading-1">Liked Songs</h2>
-                                        <span className="liked-count">{likedSongs.length} songs</span>
-                                    </div>
-                                    <button className="play-all-btn" onClick={handlePlayAll}>
+                                    <button className="aero-play-btn-sm" onClick={handlePlayAll}>
                                         <Icons.Play />
                                     </button>
                                 </div>
                                 <TrackList tracks={likedSongs} />
                             </>
                         ) : (
-                            <div className="empty-state">
-                                <Icons.Heart />
-                                <h3>Songs you like will appear here</h3>
+                            <div className="aero-empty-state">
+                                <div style={{ fontSize: 48, marginBottom: 16 }}>❤️</div>
+                                <h3 style={{ color: 'var(--aero-text)', marginBottom: 8 }}>Songs you like will appear here</h3>
                                 <p>Save songs by tapping the heart icon</p>
                             </div>
                         )}
@@ -87,32 +126,28 @@ function Library() {
                 {activeTab === 'playlists' && (
                     <>
                         {playlists.length > 0 ? (
-                            <div className="playlists-grid">
+                            <div className="aero-playlists-grid">
                                 {playlists.map(playlist => (
                                     <button
                                         key={playlist.id}
-                                        className="playlist-card"
-                                        onClick={() => navigate(`/playlist/${playlist.id}`)}
+                                        className="aero-playlist-card"
+                                        onClick={() => handlePlaylistClick(playlist)}
                                     >
-                                        <div className="playlist-card-image">
+                                        <div className="aero-playlist-image">
                                             {playlist.imageUrl ? (
                                                 <img src={playlist.imageUrl} alt={playlist.name} />
-                                            ) : (
-                                                <Icons.Music />
-                                            )}
+                                            ) : '🎵'}
                                         </div>
-                                        <div className="playlist-card-info">
-                                            <span className="playlist-card-name">{playlist.name}</span>
-                                            <span className="playlist-card-count">{playlist.tracks.length} songs</span>
-                                        </div>
+                                        <div className="aero-playlist-name">{playlist.name}</div>
+                                        <div className="aero-playlist-count">{playlist.tracks.length} songs</div>
                                     </button>
                                 ))}
                             </div>
                         ) : (
-                            <div className="empty-state">
-                                <Icons.Music />
-                                <h3>Create your first playlist</h3>
-                                <p>Click the + button in the sidebar to get started</p>
+                            <div className="aero-empty-state">
+                                <div style={{ fontSize: 48, marginBottom: 16 }}>🎵</div>
+                                <h3 style={{ color: 'var(--aero-text)', marginBottom: 8 }}>No playlists yet</h3>
+                                <p>Create playlists to organize your music</p>
                             </div>
                         )}
                     </>

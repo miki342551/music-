@@ -1,49 +1,227 @@
-/* App Layout */
-.app {
+/* Vista Aero Theme - Dark Glassmorphism */
+:root {
+    --aero-bg-dark: #0a0a1a;
+    --aero-bg-medium: #12122a;
+    --aero-bg-light: #1a1a3a;
+    --aero-glass: rgba(20, 20, 50, 0.6);
+    --aero-glass-border: rgba(100, 140, 255, 0.15);
+    --aero-accent: #00aaff;
+    --aero-accent-glow: rgba(0, 170, 255, 0.4);
+    --aero-text: #ffffff;
+    --aero-text-dim: rgba(255, 255, 255, 0.6);
+    --aero-chrome: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--aero-bg-dark);
+    color: var(--aero-text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+}
+
+/* App Container */
+.aero-app {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
     flex-direction: column;
-    height: 100vh;
     overflow: hidden;
 }
 
-.app-container {
+/* Animated Background */
+.aero-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.aero-bg-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(ellipse at 20% 20%, rgba(0, 100, 200, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(100, 0, 200, 0.1) 0%, transparent 50%),
+        linear-gradient(180deg, var(--aero-bg-dark) 0%, var(--aero-bg-medium) 50%, var(--aero-bg-dark) 100%);
+    animation: aeroGradientShift 20s ease-in-out infinite;
+}
+
+@keyframes aeroGradientShift {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.aero-bg-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.1), transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.08), transparent),
+        radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.12), transparent),
+        radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, 0.06), transparent);
+    background-size: 200px 100px;
+    animation: particleFloat 30s linear infinite;
+}
+
+@keyframes particleFloat {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-100px);
+    }
+}
+
+/* Tab Navigation */
+.aero-tabs {
+    position: relative;
+    z-index: 100;
     display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 16px 20px;
+    padding-top: max(16px, env(safe-area-inset-top));
+    background: var(--aero-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--aero-glass-border);
+}
+
+.aero-tab {
+    background: transparent;
+    border: none;
+    color: var(--aero-text-dim);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    letter-spacing: 0.3px;
+}
+
+.aero-tab:active {
+    transform: scale(0.96);
+}
+
+.aero-tab.active {
+    color: var(--aero-text);
+    background: var(--aero-glass);
+    box-shadow:
+        0 0 20px var(--aero-accent-glow),
+        0 0 40px rgba(0, 170, 255, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--aero-accent);
+}
+
+.aero-tab.active::before {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40%;
+    height: 2px;
+    background: var(--aero-accent);
+    border-radius: 1px;
+    box-shadow: 0 0 10px var(--aero-accent);
+}
+
+/* Content Area */
+.aero-content {
+    position: relative;
+    z-index: 10;
     flex: 1;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    .app-container {
-        flex-direction: column;
-    }
+/* Glassmorphism Panels */
+.aero-panel {
+    background: var(--aero-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--aero-glass-border);
+    border-radius: 16px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
 
-    /* Hide sidebar on mobile */
-    .sidebar {
-        display: none;
-    }
+/* Glowing Button Base */
+.aero-btn-glow {
+    background: var(--aero-glass);
+    border: 1px solid var(--aero-accent);
+    color: var(--aero-text);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow:
+        0 0 15px var(--aero-accent-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
 
-    /* Adjust main content for mobile */
-    .main-content {
-        padding-bottom: 140px;
-        /* Space for player + bottom nav */
-    }
+.aero-btn-glow:hover {
+    box-shadow:
+        0 0 25px var(--aero-accent-glow),
+        0 0 50px rgba(0, 170, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
 
-    /* Adjust player for mobile */
-    .player {
-        bottom: 64px;
-        /* Above bottom nav */
-    }
+.aero-btn-glow:active {
+    transform: scale(0.95);
+}
 
-    /* Content area adjustments */
-    .content-area {
-        padding: 16px;
-        padding-top: calc(16px + env(safe-area-inset-top, 0px));
-    }
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 6px;
+}
 
-    /* Fix header safe area for notch/status bar */
-    .header {
-        padding-top: env(safe-area-inset-top, 24px);
-        min-height: calc(var(--header-height) + env(safe-area-inset-top, 24px));
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Safe Area */
+@supports (padding-top: env(safe-area-inset-top)) {
+    .aero-tabs {
+        padding-top: max(16px, env(safe-area-inset-top));
     }
 }

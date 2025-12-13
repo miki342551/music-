@@ -1,22 +1,19 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
-import Sidebar from './components/Sidebar/Sidebar'
-import Header from './components/Header/Header'
 import Player from './components/Player/Player'
-import BottomNav from './components/BottomNav/BottomNav'
+import LyricsOverlay from './components/LyricsOverlay/LyricsOverlay'
 import SplashScreen from './components/SplashScreen/SplashScreen'
-import Home from './pages/Home'
 import Search from './pages/Search'
 import Library from './pages/Library'
-import Playlist from './pages/Playlist'
-import LyricsOverlay from './components/LyricsOverlay/LyricsOverlay'
 import { usePlayerStore } from './store/playerStore'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { hapticLight } from './utils/haptics'
 import './App.css'
 
 function App() {
     const showLyrics = usePlayerStore(state => state.showLyrics)
+    const currentTrack = usePlayerStore(state => state.currentTrack)
     const [showSplash, setShowSplash] = useState(true)
+    const [activeTab, setActiveTab] = useState('nowplaying')
 
     // Initialize keyboard shortcuts
     useKeyboardShortcuts()
@@ -26,29 +23,59 @@ function App() {
         setShowSplash(false)
     }
 
+    const handleTabChange = (tab) => {
+        hapticLight()
+        setActiveTab(tab)
+    }
+
+    // Auto-switch to now playing when track starts
+    useEffect(() => {
+        if (currentTrack && activeTab !== 'nowplaying') {
+            // Optionally auto-switch
+        }
+    }, [currentTrack])
+
     return (
-        <div className="app">
+        <div className="aero-app">
             {showSplash && <SplashScreen onFinish={handleSplashFinish} duration={2500} />}
             {showLyrics && <LyricsOverlay />}
-            <div className="app-container">
-                <Sidebar />
-                <main className="main-content">
-                    <Header />
-                    <div className="content-area">
-                        <Routes>
-                            <Route path="/" element={<Home />} />
-                            <Route path="/search" element={<Search />} />
-                            <Route path="/library" element={<Library />} />
-                            <Route path="/playlist/:id" element={<Playlist />} />
-                        </Routes>
-                    </div>
-                </main>
+
+            {/* Animated Background */}
+            <div className="aero-bg">
+                <div className="aero-bg-gradient" />
+                <div className="aero-bg-particles" />
             </div>
-            <Player />
-            <BottomNav />
+
+            {/* Tab Navigation */}
+            <nav className="aero-tabs">
+                <button
+                    className={`aero-tab ${activeTab === 'nowplaying' ? 'active' : ''}`}
+                    onClick={() => handleTabChange('nowplaying')}
+                >
+                    Now Playing
+                </button>
+                <button
+                    className={`aero-tab ${activeTab === 'search' ? 'active' : ''}`}
+                    onClick={() => handleTabChange('search')}
+                >
+                    Search
+                </button>
+                <button
+                    className={`aero-tab ${activeTab === 'library' ? 'active' : ''}`}
+                    onClick={() => handleTabChange('library')}
+                >
+                    Library
+                </button>
+            </nav>
+
+            {/* Content Area */}
+            <main className="aero-content">
+                {activeTab === 'nowplaying' && <Player />}
+                {activeTab === 'search' && <Search />}
+                {activeTab === 'library' && <Library />}
+            </main>
         </div>
     )
 }
 
 export default App
-
