@@ -31,7 +31,7 @@ export default defineConfig({
         host: true,
         proxy: {
             '/api': {
-                target: 'http://localhost:3001',
+                target: 'https://music-production-4deb.up.railway.app',
                 changeOrigin: true
             }
         }

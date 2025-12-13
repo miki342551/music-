@@ -1,6 +1,6 @@
 // Music API Service - Handles search and stream fetching
 
-const API_BASE = '/api'
+const API_BASE = 'https://music-production-4deb.up.railway.app/api'
 
 // Search for tracks
 export async function searchTracks(query) {

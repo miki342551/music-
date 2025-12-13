@@ -10,7 +10,7 @@ const DownloadButton = ({ videoId, title, className = '' }) => {
 
         setIsDownloading(true)
         try {
-            const response = await fetch(`http://localhost:3001/api/download/${videoId}`)
+            const response = await fetch(`https://music-production-4deb.up.railway.app/api/download/${videoId}`)
             if (!response.ok) throw new Error('Download failed')
 
             const blob = await response.blob()

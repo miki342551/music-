@@ -70,7 +70,7 @@ export const usePlayerStore = create(
 
                 try {
                     // Get stream URL from API
-                    const response = await fetch(`/api/stream/${track.videoId}`)
+                    const response = await fetch(`https://music-production-4deb.up.railway.app/api/stream/${track.videoId}`)
                     const data = await response.json()
 
                     if (!data.url) {
@@ -109,10 +109,10 @@ export const usePlayerStore = create(
                 if (nextIndex < queue.length) {
                     const nextTrack = queue[nextIndex]
                     console.log('Prefetching:', nextTrack.title)
-                    fetch(`/api/stream/${nextTrack.videoId}`).catch(() => { })
+                    fetch(`https://music-production-4deb.up.railway.app/api/stream/${nextTrack.videoId}`).catch(() => { })
                 } else if (repeat === 'all' && queue.length > 0) {
                     const nextTrack = queue[0]
-                    fetch(`/api/stream/${nextTrack.videoId}`).catch(() => { })
+                    fetch(`https://music-production-4deb.up.railway.app/api/stream/${nextTrack.videoId}`).catch(() => { })
                 }
             },
 
