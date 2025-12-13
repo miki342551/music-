@@ -38,5 +38,12 @@
     /* Content area adjustments */
     .content-area {
         padding: 16px;
+        padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    }
+
+    /* Fix header safe area for notch/status bar */
+    .header {
+        padding-top: env(safe-area-inset-top, 24px);
+        min-height: calc(var(--header-height) + env(safe-area-inset-top, 24px));
     }
 }
