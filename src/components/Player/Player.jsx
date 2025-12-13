@@ -2,6 +2,7 @@ import { usePlayerStore } from '../../store/playerStore'
 import { useLibraryStore } from '../../store/libraryStore'
 import { formatDuration } from '../../services/musicApi'
 import DownloadButton from '../DownloadButton/DownloadButton'
+import AudioVisualizer from '../AudioVisualizer/AudioVisualizer'
 import './Player.css'
 
 const Icons = {
@@ -112,7 +113,7 @@ function Player({ onExpand }) {
     const liked = currentTrack ? isLiked(currentTrack.videoId) : false
 
     return (
-        <div className="player glass">
+        <div className="player glass glass-premium player-premium">
             {/* Track Info */}
             <div className="player-track" onClick={onExpand}>
                 {currentTrack ? (
