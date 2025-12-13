@@ -135,7 +135,98 @@ app.get('/api/search', async (req, res) => {
     }
 })
 
-// Get stream URL
+// Multiple Piped API instances for fallback
+const PIPED_INSTANCES = [
+    'https://pipedapi.kavin.rocks',
+    'https://pipedapi.leptons.xyz',
+    'https://pipedapi.r4fo.com',
+    'https://pipedapi.in.projectsegfau.lt',
+    'https://pipedapi.adminforge.de',
+    'https://api.piped.yt',
+]
+
+// Helper to fetch with timeout
+async function fetchWithTimeout(url, options = {}, timeout = 8000) {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        })
+        return response
+    } finally {
+        clearTimeout(timeoutId)
+    }
+}
+
+// Try to get stream from Piped instances
+async function getStreamFromPiped(videoId) {
+    for (const instance of PIPED_INSTANCES) {
+        try {
+            console.log(`  → Trying: ${instance}`)
+            const response = await fetchWithTimeout(`${instance}/streams/${videoId}`)
+
+            if (!response.ok) {
+                console.log(`    ✗ HTTP ${response.status}`)
+                continue
+            }
+
+            const data = await response.json()
+
+            // Find best audio stream
+            const audioStream = data.audioStreams
+                ?.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))
+                ?.[0]
+
+            if (audioStream?.url) {
+                console.log(`    ✓ Found audio stream (${audioStream.bitrate}kbps)`)
+                return {
+                    url: audioStream.url,
+                    title: data.title,
+                    artist: data.uploader || 'Unknown Artist',
+                    thumbnail: data.thumbnailUrl || `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+                    duration: data.duration,
+                    source: 'piped'
+                }
+            }
+        } catch (error) {
+            console.log(`    ✗ Error: ${error.message}`)
+        }
+    }
+    return null
+}
+
+// Fallback to yt-dlp
+async function getStreamFromYtDlp(videoId) {
+    console.log(`  → Trying: yt-dlp`)
+    const args = [
+        '-f', 'bestaudio',
+        '--dump-json',
+        '--no-warnings',
+        videoId
+    ]
+
+    const output = await runYtDlp(args)
+    const data = JSON.parse(output)
+
+    if (!data.url) {
+        throw new Error('No stream URL found')
+    }
+
+    console.log(`    ✓ Found stream via yt-dlp`)
+    return {
+        url: data.url,
+        title: data.title,
+        artist: data.uploader || data.artist || 'Unknown Artist',
+        thumbnail: data.thumbnail,
+        duration: data.duration,
+        source: 'yt-dlp'
+    }
+}
+
+// Get stream URL with multiple sources
 app.get('/api/stream/:videoId', async (req, res) => {
     const { videoId } = req.params
 
@@ -151,27 +242,13 @@ app.get('/api/stream/:videoId', async (req, res) => {
     try {
         console.log(`\n🎵 Getting stream for: ${videoId}`)
 
-        // Get best audio
-        const args = [
-            '-f', 'bestaudio',
-            '--dump-json',
-            '--no-warnings',
-            videoId
-        ]
+        // Try Piped instances first (faster)
+        let streamData = await getStreamFromPiped(videoId)
 
-        const output = await runYtDlp(args)
-        const data = JSON.parse(output)
-
-        if (!data.url) {
-            throw new Error('No stream URL found')
-        }
-
-        const streamData = {
-            url: data.url,
-            title: data.title,
-            artist: data.uploader || data.artist || 'Unknown Artist',
-            thumbnail: data.thumbnail,
-            duration: data.duration
+        // Fallback to yt-dlp if Piped fails
+        if (!streamData) {
+            console.log('  ⚠ All Piped instances failed, falling back to yt-dlp')
+            streamData = await getStreamFromYtDlp(videoId)
         }
 
         // Cache result
@@ -180,7 +257,13 @@ app.get('/api/stream/:videoId', async (req, res) => {
             timestamp: Date.now()
         })
 
-        console.log(`✓ Stream found: ${data.title}`)
+        // Prune cache if too large
+        if (cache.stream.size > 200) {
+            const firstKey = cache.stream.keys().next().value
+            cache.stream.delete(firstKey)
+        }
+
+        console.log(`✓ Stream found: ${streamData.title} (via ${streamData.source})`)
         res.json(streamData)
     } catch (error) {
         console.error('Stream error:', error)
