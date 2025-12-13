@@ -174,9 +174,13 @@ app.get('/api/stream/:videoId', async (req, res) => {
             '-f', formatSelector,
             '--dump-json',
             '--no-warnings',
-            '--extractor-args', 'youtube:player_client=android,web',
-            '--user-agent', 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+            '--extractor-args', 'youtube:player_client=ios,mweb',
+            '--user-agent', 'com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)',
+            '--add-header', 'Accept-Language:en-US,en;q=0.9',
+            '--geo-bypass',
             '--no-check-certificates',
+            '--socket-timeout', '30',
+            '--retries', '3',
             videoId
         ]
 
