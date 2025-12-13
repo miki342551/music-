@@ -1,278 +1,414 @@
-/* Player Styles */
-.player {
-    height: var(--player-height);
-    display: grid;
-    grid-template-columns: 1fr 2fr 1fr;
-    align-items: center;
-    gap: var(--spacing-lg);
-    padding: 0 var(--spacing-lg);
-    border-top: 1px solid var(--border-color);
-    position: relative;
+/* Player Container - Full Screen Dark UI */
+.player-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #0f0f0f;
     z-index: 200;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 20px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    gap: 16px;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+    max-height: 90vh;
+    overflow: hidden;
 }
 
-/* Track Info */
-.player-track {
+.player-container.empty {
+    height: auto;
+    padding: 20px;
+}
+
+.player-empty-state {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 14px;
+    padding: 10px;
+}
+
+/* Top Bar */
+.player-topbar {
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
-    min-width: 0;
+    justify-content: space-between;
+    margin-bottom: 8px;
 }
 
-.player-track-image {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--border-radius-sm);
+.player-header-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    letter-spacing: -0.2px;
+}
+
+.player-icon-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.player-icon-btn:active {
+    transform: scale(0.92);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.player-icon-btn.active {
+    color: #1ed760;
+    background: rgba(30, 215, 96, 0.1);
+}
+
+/* Album Art */
+.player-artwork {
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: 280px;
+    margin: 0 auto 16px;
+    border-radius: 16px;
     overflow: hidden;
-    flex-shrink: 0;
-    box-shadow: var(--shadow-md);
+    box-shadow:
+        0 20px 40px -10px rgba(0, 0, 0, 0.5),
+        0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
-.player-track-image img {
+.player-artwork img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.player-track-info {
+/* Track Info Section */
+.player-track-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 14px;
+    margin-bottom: 8px;
+}
+
+.player-track-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+}
+
+.player-mini-art {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.player-track-text {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    gap: 2px;
 }
 
 .player-track-title {
-    font-size: var(--font-size-md);
-    font-weight: 500;
-    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    letter-spacing: -0.3px;
 }
 
 .player-track-artist {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.player-like-btn {
-    color: var(--text-secondary);
-    padding: var(--spacing-sm);
-    transition: all var(--transition-fast);
+.player-follow-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
 }
 
-.player-like-btn:hover {
-    color: var(--text-primary);
-    transform: scale(1.1);
+.player-follow-btn:active {
+    background: rgba(255, 255, 255, 0.2);
 }
 
-.player-like-btn.liked {
-    color: var(--primary);
+/* Progress Section */
+.player-progress-section {
+    padding: 0 4px;
+    margin-bottom: 16px;
 }
 
-.player-empty {
-    color: var(--text-muted);
-    font-size: var(--font-size-md);
+.player-progress-track {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+    margin-bottom: 8px;
 }
 
-/* Controls */
-.player-controls {
+.player-progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 2px;
+}
+
+.player-progress-handle {
+    position: absolute;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.player-time-labels {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-sm);
+    justify-content: space-between;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
 }
 
-.player-buttons {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
-
-.player-btn {
-    color: var(--text-secondary);
-    padding: var(--spacing-xs);
+/* Control Wrapper */
+.player-control-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition-fast);
+    gap: 24px;
+    margin-bottom: 16px;
 }
 
-.player-btn:hover {
-    color: var(--text-primary);
-    transform: scale(1.1);
-}
-
-.player-btn.active {
-    color: var(--primary);
-}
-
-.player-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.play-btn {
-    width: 40px;
-    height: 40px;
-    background: var(--text-primary);
-    color: var(--bg-primary) !important;
+.player-side-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: white;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow:
+        -3px -3px 6px rgba(255, 255, 255, 0.02),
+        3px 3px 6px rgba(0, 0, 0, 0.3);
 }
 
-.play-btn:hover {
-    transform: scale(1.06);
-    background: var(--text-primary);
+.player-side-btn:active {
+    transform: scale(0.92);
 }
 
-.loading-spinner {
+/* Control Pad */
+.player-control-pad {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    background: #151515;
+    border-radius: 50%;
+    box-shadow:
+        -8px -8px 16px rgba(255, 255, 255, 0.02),
+        8px 8px 16px rgba(0, 0, 0, 0.4),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.player-pad-btn {
+    position: absolute;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    padding: 8px;
+}
+
+.player-pad-btn:active {
+    transform: scale(0.88);
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.player-pad-btn.center {
+    width: 64px;
+    height: 64px;
+    background: #1a1a1a;
+    color: white;
+    border-radius: 50%;
+    box-shadow:
+        -4px -4px 8px rgba(255, 255, 255, 0.02),
+        4px 4px 8px rgba(0, 0, 0, 0.4);
+    z-index: 2;
+}
+
+.player-pad-btn.center:active {
+    transform: scale(0.94);
+}
+
+.player-pad-btn.top {
+    top: 18px;
+}
+
+.player-pad-btn.top.active {
+    color: #ff6b8a;
+}
+
+.player-pad-btn.bottom {
+    bottom: 18px;
+}
+
+.player-pad-btn.left {
+    left: 18px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.player-pad-btn.right {
+    right: 18px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Loading Spinner */
+.player-loading-spinner {
     width: 24px;
     height: 24px;
-    border: 2px solid var(--bg-primary);
-    border-top-color: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: white;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
 
-/* Progress Bar */
-.player-progress {
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Bottom Controls */
+.player-bottom-controls {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    width: 100%;
-    max-width: 600px;
+    justify-content: space-around;
+    padding: 0 40px;
 }
 
-.player-time {
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
-    min-width: 40px;
-    text-align: center;
-}
-
-.progress-bar {
-    flex: 1;
-    height: 4px;
-    background: var(--bg-highlight);
-    border-radius: var(--border-radius-full);
-    cursor: pointer;
-    position: relative;
-}
-
-.progress-bar:hover {
-    height: 6px;
-}
-
-.progress-bar:hover .progress-handle {
-    opacity: 1;
-}
-
-.progress-fill {
-    height: 100%;
-    background: var(--text-primary);
-    border-radius: var(--border-radius-full);
-    transition: width 0.1s linear;
-}
-
-.progress-bar:hover .progress-fill {
-    background: var(--primary);
-}
-
-.progress-handle {
-    position: absolute;
-    top: 50%;
-    width: 12px;
-    height: 12px;
-    background: var(--text-primary);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    opacity: 0;
-    transition: opacity var(--transition-fast);
-    box-shadow: var(--shadow-sm);
-}
-
-/* Extra Controls */
-.player-extra {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--spacing-md);
-}
-
-.player-volume {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.volume-bar {
-    width: 100px;
-    height: 4px;
-    background: var(--bg-highlight);
-    border-radius: var(--border-radius-full);
-    cursor: pointer;
-    position: relative;
-}
-
-.volume-bar:hover {
-    height: 6px;
-}
-
-.volume-fill {
-    height: 100%;
-    background: var(--text-primary);
-    border-radius: var(--border-radius-full);
-}
-
-.volume-bar:hover .volume-fill {
-    background: var(--primary);
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-    .player {
-        grid-template-columns: 1fr 1fr;
+/* Desktop Styles */
+@media (min-width: 769px) {
+    .player-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 90px;
+        max-height: 90px;
+        border-radius: 0;
+        flex-direction: row;
+        align-items: center;
+        padding: 0 24px;
+        gap: 24px;
     }
 
-    .player-extra {
-        display: none;
-    }
-}
-
-@media (max-width: 768px) {
-    .player {
-        grid-template-columns: 1fr auto;
-        height: var(--player-height);
-        padding: 0 var(--spacing-md);
-        gap: var(--spacing-md);
-    }
-
-    .player-controls {
-        gap: 0;
-    }
-
-    .player-buttons {
-        gap: var(--spacing-sm);
-    }
-
-    .player-btn.shuffle,
-    .player-btn.repeat {
+    .player-topbar {
         display: none;
     }
 
-    .player-progress {
+    .player-artwork {
+        width: 60px;
+        height: 60px;
+        max-width: 60px;
+        margin: 0;
+        border-radius: 8px;
+        aspect-ratio: auto;
+        flex-shrink: 0;
+    }
+
+    .player-track-section {
+        flex: 1;
+        max-width: 280px;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+
+    .player-follow-btn {
         display: none;
     }
 
-    .player-track-image {
-        width: 48px;
-        height: 48px;
+    .player-progress-section {
+        flex: 2;
+        max-width: 600px;
+        margin: 0;
     }
 
-    .player-like-btn {
+    .player-control-wrapper {
+        flex: 1;
+        max-width: 300px;
+        margin: 0;
+    }
+
+    .player-side-btn {
         display: none;
+    }
+
+    .player-control-pad {
+        width: 140px;
+        height: 140px;
+    }
+
+    .player-pad-btn.center {
+        width: 52px;
+        height: 52px;
+    }
+
+    .player-pad-btn.top,
+    .player-pad-btn.bottom {
+        display: none;
+    }
+
+    .player-pad-btn.left {
+        left: 12px;
+    }
+
+    .player-pad-btn.right {
+        right: 12px;
+    }
+
+    .player-bottom-controls {
+        flex: 1;
+        max-width: 200px;
+        padding: 0;
+        justify-content: flex-end;
+        gap: 12px;
     }
 }
