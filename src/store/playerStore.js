@@ -63,37 +63,88 @@ export const usePlayerStore = create(
                 audio.addEventListener('pause', () => set({ isPlaying: false }))
             },
 
-            // Play a track
+            // Play a track with retry mechanism
             playTrack: async (track, addToQueue = false) => {
                 const audio = getAudio()
                 set({ isLoading: true, error: null, currentTrack: track })
 
-                try {
-                    // Get stream URL from API
-                    const response = await fetch(`https://music-production-4deb.up.railway.app/api/stream/${track.videoId}`)
-                    const data = await response.json()
+                const MAX_RETRIES = 3
+                let lastError = null
 
-                    if (!data.url) {
-                        throw new Error('No stream URL found')
-                    }
+                for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+                    try {
+                        // Get stream URL from API
+                        const response = await fetch(
+                            `https://music-production-4deb.up.railway.app/api/stream/${track.videoId}`,
+                            { signal: AbortSignal.timeout(15000) } // 15 second timeout
+                        )
+                        const data = await response.json()
 
-                    audio.src = data.url
-                    await audio.play()
+                        if (!data.url) {
+                            throw new Error('No stream URL found')
+                        }
 
-                    if (addToQueue) {
-                        const { queue, queueIndex } = get()
-                        set({
-                            queue: [...queue.slice(0, queueIndex + 1), track, ...queue.slice(queueIndex + 1)],
-                            queueIndex: queueIndex + 1
+                        audio.src = data.url
+
+                        // Wait for audio to be ready before playing
+                        await new Promise((resolve, reject) => {
+                            const onCanPlay = () => {
+                                audio.removeEventListener('canplay', onCanPlay)
+                                audio.removeEventListener('error', onError)
+                                resolve()
+                            }
+                            const onError = (e) => {
+                                audio.removeEventListener('canplay', onCanPlay)
+                                audio.removeEventListener('error', onError)
+                                reject(new Error('Audio failed to load'))
+                            }
+                            audio.addEventListener('canplay', onCanPlay)
+                            audio.addEventListener('error', onError)
+
+                            // Timeout for audio loading
+                            setTimeout(() => {
+                                audio.removeEventListener('canplay', onCanPlay)
+                                audio.removeEventListener('error', onError)
+                                reject(new Error('Audio load timeout'))
+                            }, 10000)
                         })
-                    }
 
-                    // Prefetch next track to warm up server cache
-                    get().prefetchNext()
-                } catch (error) {
-                    console.error('Error playing track:', error)
-                    set({ error: error.message, isLoading: false })
+                        await audio.play()
+                        set({ isLoading: false, error: null })
+
+                        if (addToQueue) {
+                            const { queue, queueIndex } = get()
+                            set({
+                                queue: [...queue.slice(0, queueIndex + 1), track, ...queue.slice(queueIndex + 1)],
+                                queueIndex: queueIndex + 1
+                            })
+                        }
+
+                        // Prefetch next track to warm up server cache
+                        get().prefetchNext()
+                        return // Success, exit function
+                    } catch (error) {
+                        console.warn(`Attempt ${attempt}/${MAX_RETRIES} failed:`, error.message)
+                        lastError = error
+
+                        if (attempt < MAX_RETRIES) {
+                            // Wait before retry (exponential backoff)
+                            await new Promise(r => setTimeout(r, attempt * 1000))
+                        }
+                    }
                 }
+
+                // All retries failed
+                console.error('All playback attempts failed:', lastError)
+                set({ error: 'Playback failed. Skipping...', isLoading: false })
+
+                // Auto-skip to next track after 2 seconds
+                setTimeout(() => {
+                    const { queue, queueIndex } = get()
+                    if (queue.length > queueIndex + 1) {
+                        get().playNext()
+                    }
+                }, 2000)
             },
 
             // Prefetch next track

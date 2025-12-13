@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { searchTracks } from '../services/musicApi'
 import TrackList from '../components/TrackList/TrackList'
+import Skeleton from '../components/Skeleton/Skeleton'
 import './Pages.css'
 
 const Icons = {
@@ -78,9 +79,7 @@ function Search() {
                         </h1>
 
                         {loading ? (
-                            <div className="loading-container">
-                                <div className="loading-spinner" />
-                            </div>
+                            <Skeleton type="track" count={8} />
                         ) : results.length > 0 ? (
                             <TrackList tracks={results} />
                         ) : (
