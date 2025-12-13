@@ -135,24 +135,43 @@ app.get('/api/search', async (req, res) => {
     }
 })
 
-// Get stream URL using yt-dlp only
+// Get stream URL using yt-dlp with quality selection
 app.get('/api/stream/:videoId', async (req, res) => {
     const { videoId } = req.params
+    const quality = req.query.quality || 'high' // low, medium, high
+
+    // Create cache key with quality
+    const cacheKey = `${videoId}-${quality}`
 
     // Check cache
-    if (cache.stream.has(videoId)) {
-        const { data, timestamp } = cache.stream.get(videoId)
+    if (cache.stream.has(cacheKey)) {
+        const { data, timestamp } = cache.stream.get(cacheKey)
         if (Date.now() - timestamp < STREAM_TTL) {
-            console.log(`⚡ Cache hit for stream: ${videoId}`)
+            console.log(`⚡ Cache hit for stream: ${videoId} (${quality})`)
             return res.json(data)
         }
     }
 
     try {
-        console.log(`\n🎵 Getting stream for: ${videoId}`)
+        console.log(`\n🎵 Getting ${quality} quality stream for: ${videoId}`)
+
+        // Select format based on quality
+        let formatSelector
+        switch (quality) {
+            case 'low':
+                formatSelector = 'worstaudio[abr<=64]/worstaudio'
+                break
+            case 'medium':
+                formatSelector = 'bestaudio[abr<=128]/bestaudio[abr<=160]/bestaudio'
+                break
+            case 'high':
+            default:
+                formatSelector = 'bestaudio'
+                break
+        }
 
         const args = [
-            '-f', 'bestaudio',
+            '-f', formatSelector,
             '--dump-json',
             '--no-warnings',
             videoId
@@ -170,11 +189,13 @@ app.get('/api/stream/:videoId', async (req, res) => {
             title: data.title,
             artist: data.uploader || data.artist || 'Unknown Artist',
             thumbnail: data.thumbnail,
-            duration: data.duration
+            duration: data.duration,
+            quality: quality,
+            bitrate: data.abr || 'unknown'
         }
 
         // Cache result
-        cache.stream.set(videoId, {
+        cache.stream.set(cacheKey, {
             data: streamData,
             timestamp: Date.now()
         })
@@ -185,7 +206,7 @@ app.get('/api/stream/:videoId', async (req, res) => {
             cache.stream.delete(firstKey)
         }
 
-        console.log(`✓ Stream found: ${streamData.title}`)
+        console.log(`✓ Stream found: ${streamData.title} (${quality} @ ${streamData.bitrate}kbps)`)
         res.json(streamData)
     } catch (error) {
         console.error('Stream error:', error)

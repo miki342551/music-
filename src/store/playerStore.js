@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { getRecommendedQuality } from '../utils/networkQuality'
 
 // Audio element singleton
 let audioElement = null
@@ -38,6 +39,12 @@ export const usePlayerStore = create(
             isLoading: false,
             error: null,
 
+            // Audio quality: 'auto', 'low', 'medium', 'high'
+            audioQuality: 'auto',
+
+            // Set audio quality
+            setAudioQuality: (quality) => set({ audioQuality: quality }),
+
             // Initialize audio listeners
             initAudio: () => {
                 const audio = getAudio()
@@ -73,9 +80,13 @@ export const usePlayerStore = create(
 
                 for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
                     try {
-                        // Get stream URL from API
+                        // Get recommended quality based on network
+                        const { audioQuality } = get()
+                        const quality = getRecommendedQuality(audioQuality)
+
+                        // Get stream URL from API with quality
                         const response = await fetch(
-                            `https://music-production-4deb.up.railway.app/api/stream/${track.videoId}`,
+                            `https://music-production-4deb.up.railway.app/api/stream/${track.videoId}?quality=${quality.name}`,
                             { signal: AbortSignal.timeout(15000) } // 15 second timeout
                         )
                         const data = await response.json()
