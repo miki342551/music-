@@ -88,7 +88,7 @@ const Icons = {
     )
 }
 
-function Player({ onExpand }) {
+function Player() {
     const {
         currentTrack,
         isPlaying,
@@ -106,22 +106,6 @@ function Player({ onExpand }) {
     } = usePlayerStore()
 
     const { isLiked, toggleLike } = useLibraryStore()
-
-    // Swipe handler
-    const touchStartRef = React.useRef({ x: 0, y: 0 })
-    const handlePlayerTouchStart = (e) => {
-        touchStartRef.current = {
-            x: e.touches[0].clientX,
-            y: e.touches[0].clientY
-        }
-    }
-    const handlePlayerTouchEnd = (e) => {
-        const deltaY = touchStartRef.current.y - e.changedTouches[0].clientY
-        if (deltaY > 50) {
-            hapticLight()
-            onExpand?.()
-        }
-    }
 
     const handleSeek = (e) => {
         const rect = e.currentTarget.getBoundingClientRect()
@@ -142,25 +126,16 @@ function Player({ onExpand }) {
     const progress = duration ? (currentTime / duration) * 100 : 0
     const liked = currentTrack ? isLiked(currentTrack.videoId) : false
 
+    // Don't render anything if no track
     if (!currentTrack) {
-        return (
-            <div className="player-container empty">
-                <div className="player-empty-state">
-                    <span>No track playing</span>
-                </div>
-            </div>
-        )
+        return null
     }
 
     return (
-        <div
-            className="player-container"
-            onTouchStart={handlePlayerTouchStart}
-            onTouchEnd={handlePlayerTouchEnd}
-        >
+        <div className="player-container">
             {/* Top Bar */}
             <div className="player-topbar">
-                <button className="player-icon-btn" onClick={onExpand}>
+                <button className="player-icon-btn">
                     <Icons.Back />
                 </button>
                 <span className="player-header-title">Now Playing</span>
@@ -170,7 +145,7 @@ function Player({ onExpand }) {
             </div>
 
             {/* Album Art */}
-            <div className="player-artwork" onClick={onExpand}>
+            <div className="player-artwork">
                 <img
                     src={currentTrack.thumbnail}
                     alt={currentTrack.title}
