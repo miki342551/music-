@@ -7,9 +7,20 @@
     },
     "plugins": {
         "SplashScreen": {
-            "launchShowDuration": 2000,
-            "backgroundColor": "#1a1a2e",
-            "showSpinner": false
+            "launchShowDuration": 0,
+            "backgroundColor": "#0a0a15",
+            "showSpinner": false,
+            "androidSplashResourceName": "splash",
+            "splashFullScreen": true,
+            "splashImmersive": true
+        },
+        "CapacitorHttp": {
+            "enabled": true
         }
+    },
+    "android": {
+        "backgroundColor": "#0a0a15",
+        "allowMixedContent": true,
+        "webContentsDebuggingEnabled": false
     }
 }

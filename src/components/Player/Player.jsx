@@ -1,8 +1,10 @@
+import React from 'react'
 import { usePlayerStore } from '../../store/playerStore'
 import { useLibraryStore } from '../../store/libraryStore'
 import { formatDuration } from '../../services/musicApi'
 import DownloadButton from '../DownloadButton/DownloadButton'
 import AudioVisualizer from '../AudioVisualizer/AudioVisualizer'
+import { hapticLight, hapticMedium } from '../../utils/haptics'
 import './Player.css'
 
 const Icons = {
@@ -97,6 +99,36 @@ function Player({ onExpand }) {
 
     const { isLiked, toggleLike } = useLibraryStore()
 
+    // Swipe handler for mini player
+    const touchStartRef = React.useRef({ x: 0, y: 0 })
+    const handlePlayerTouchStart = (e) => {
+        touchStartRef.current = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY
+        }
+    }
+    const handlePlayerTouchEnd = (e) => {
+        const deltaY = touchStartRef.current.y - e.changedTouches[0].clientY
+        if (deltaY > 50) {
+            hapticLight()
+            onExpand?.()
+        }
+    }
+
+    // Add haptic to controls
+    const handlePlayWithHaptic = () => {
+        hapticMedium()
+        togglePlay()
+    }
+    const handleNextWithHaptic = () => {
+        hapticLight()
+        playNext()
+    }
+    const handlePrevWithHaptic = () => {
+        hapticLight()
+        playPrevious()
+    }
+
     const handleSeek = (e) => {
         const rect = e.currentTarget.getBoundingClientRect()
         const percent = (e.clientX - rect.left) / rect.width
@@ -115,7 +147,12 @@ function Player({ onExpand }) {
     return (
         <div className="player glass glass-premium player-premium">
             {/* Track Info */}
-            <div className="player-track" onClick={onExpand}>
+            <div
+                className="player-track"
+                onClick={onExpand}
+                onTouchStart={handlePlayerTouchStart}
+                onTouchEnd={handlePlayerTouchEnd}
+            >
                 {currentTrack ? (
                     <>
                         <div className="player-track-image">
@@ -154,14 +191,14 @@ function Player({ onExpand }) {
                     </button>
                     <button
                         className="player-btn"
-                        onClick={playPrevious}
+                        onClick={handlePrevWithHaptic}
                         title="Previous"
                     >
                         <Icons.SkipPrev />
                     </button>
                     <button
                         className="player-btn play-btn"
-                        onClick={togglePlay}
+                        onClick={handlePlayWithHaptic}
                         disabled={!currentTrack || isLoading}
                         title={isPlaying ? 'Pause' : 'Play'}
                     >

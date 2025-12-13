@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Sidebar from './components/Sidebar/Sidebar'
 import Header from './components/Header/Header'
 import Player from './components/Player/Player'
 import BottomNav from './components/BottomNav/BottomNav'
 import NowPlaying from './components/NowPlaying/NowPlaying'
+import SplashScreen from './components/SplashScreen/SplashScreen'
 import Home from './pages/Home'
 import Search from './pages/Search'
 import Library from './pages/Library'
@@ -17,12 +18,19 @@ import './App.css'
 function App() {
     const showLyrics = usePlayerStore(state => state.showLyrics)
     const [showNowPlaying, setShowNowPlaying] = useState(false)
+    const [showSplash, setShowSplash] = useState(true)
 
     // Initialize keyboard shortcuts
     useKeyboardShortcuts()
 
+    // Hide splash after loading
+    const handleSplashFinish = () => {
+        setShowSplash(false)
+    }
+
     return (
         <div className="app">
+            {showSplash && <SplashScreen onFinish={handleSplashFinish} duration={2500} />}
             {showLyrics && <LyricsOverlay />}
             <NowPlaying isOpen={showNowPlaying} onClose={() => setShowNowPlaying(false)} />
             <div className="app-container">

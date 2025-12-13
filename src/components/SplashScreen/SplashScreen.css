@@ -1,0 +1,115 @@
+.splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0a0a15 0%, #1a1a2e 50%, #0a0a15 100%);
+    z-index: 9999;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.splash-screen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    z-index: 1;
+}
+
+.splash-logo {
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1ed760 0%, #17a34a 100%);
+    border-radius: 24px;
+    color: white;
+    box-shadow:
+        0 20px 60px rgba(30, 215, 96, 0.3),
+        0 0 100px rgba(30, 215, 96, 0.2);
+    animation: logoPulse 2s ease-in-out infinite;
+}
+
+@keyframes logoPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow:
+            0 20px 60px rgba(30, 215, 96, 0.3),
+            0 0 100px rgba(30, 215, 96, 0.2);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow:
+            0 25px 80px rgba(30, 215, 96, 0.4),
+            0 0 120px rgba(30, 215, 96, 0.3);
+    }
+}
+
+.splash-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 4px;
+    margin-top: 16px;
+}
+
+.splash-subtitle {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    margin-top: -8px;
+}
+
+.splash-loader {
+    width: 120px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    margin-top: 32px;
+    overflow: hidden;
+}
+
+.splash-loader-bar {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #1ed760 0%, #4facfe 100%);
+    border-radius: 2px;
+    animation: loadingProgress 1.5s ease-in-out infinite;
+}
+
+@keyframes loadingProgress {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.splash-bg-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(circle at 30% 20%, rgba(30, 215, 96, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 70% 80%, rgba(79, 172, 254, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
