@@ -219,7 +219,7 @@
     animation-delay: 0.4s;
 }
 
-/* Responsive */
+/* Mobile Responsive */
 @media (max-width: 768px) {
     .track-list-header {
         display: none;
@@ -227,6 +227,8 @@
 
     .track-item {
         grid-template-columns: 1fr auto;
+        padding: 12px 16px;
+        min-height: 64px;
     }
 
     .track-col.index {
@@ -235,6 +237,19 @@
 
     .track-col.album {
         display: none;
+    }
+
+    .track-thumb {
+        width: 48px;
+        height: 48px;
+    }
+
+    .track-title {
+        font-size: 15px;
+    }
+
+    .track-artist {
+        font-size: 13px;
     }
 
     .track-like-btn,

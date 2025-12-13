@@ -11,3 +11,32 @@
     flex: 1;
     overflow: hidden;
 }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+    }
+
+    /* Hide sidebar on mobile */
+    .sidebar {
+        display: none;
+    }
+
+    /* Adjust main content for mobile */
+    .main-content {
+        padding-bottom: 140px;
+        /* Space for player + bottom nav */
+    }
+
+    /* Adjust player for mobile */
+    .player {
+        bottom: 64px;
+        /* Above bottom nav */
+    }
+
+    /* Content area adjustments */
+    .content-area {
+        padding: 16px;
+    }
+}

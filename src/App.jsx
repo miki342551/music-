@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Sidebar from './components/Sidebar/Sidebar'
 import Header from './components/Header/Header'
 import Player from './components/Player/Player'
+import BottomNav from './components/BottomNav/BottomNav'
+import NowPlaying from './components/NowPlaying/NowPlaying'
 import Home from './pages/Home'
 import Search from './pages/Search'
 import Library from './pages/Library'
@@ -13,6 +16,7 @@ import './App.css'
 
 function App() {
     const showLyrics = usePlayerStore(state => state.showLyrics)
+    const [showNowPlaying, setShowNowPlaying] = useState(false)
 
     // Initialize keyboard shortcuts
     useKeyboardShortcuts()
@@ -20,6 +24,7 @@ function App() {
     return (
         <div className="app">
             {showLyrics && <LyricsOverlay />}
+            <NowPlaying isOpen={showNowPlaying} onClose={() => setShowNowPlaying(false)} />
             <div className="app-container">
                 <Sidebar />
                 <main className="main-content">
@@ -34,7 +39,8 @@ function App() {
                     </div>
                 </main>
             </div>
-            <Player />
+            <Player onExpand={() => setShowNowPlaying(true)} />
+            <BottomNav />
         </div>
     )
 }

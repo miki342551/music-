@@ -72,7 +72,7 @@ const Icons = {
     )
 }
 
-function Player() {
+function Player({ onExpand }) {
     const {
         currentTrack,
         isPlaying,
@@ -114,7 +114,7 @@ function Player() {
     return (
         <div className="player glass">
             {/* Track Info */}
-            <div className="player-track">
+            <div className="player-track" onClick={onExpand}>
                 {currentTrack ? (
                     <>
                         <div className="player-track-image">
@@ -129,7 +129,7 @@ function Player() {
                         </div>
                         <button
                             className={`player-like-btn ${liked ? 'liked' : ''}`}
-                            onClick={() => toggleLike(currentTrack)}
+                            onClick={(e) => { e.stopPropagation(); toggleLike(currentTrack) }}
                         >
                             {liked ? <Icons.HeartFilled /> : <Icons.Heart />}
                         </button>
