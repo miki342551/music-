@@ -116,7 +116,16 @@ export const useLibraryStore = create(
             }
         }),
         {
-            name: 'library-storage'
+            name: 'library-storage',
+            // Merge persisted state with initial state to prevent data loss
+            merge: (persistedState, currentState) => ({
+                ...currentState,
+                ...persistedState,
+                // Ensure arrays are preserved correctly
+                likedSongs: persistedState?.likedSongs || [],
+                playlists: persistedState?.playlists || [],
+                recentlyPlayed: persistedState?.recentlyPlayed || [],
+            }),
         }
     )
 )
