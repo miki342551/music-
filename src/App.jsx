@@ -4,7 +4,6 @@ import Sidebar from './components/Sidebar/Sidebar'
 import Header from './components/Header/Header'
 import Player from './components/Player/Player'
 import BottomNav from './components/BottomNav/BottomNav'
-import NowPlaying from './components/NowPlaying/NowPlaying'
 import SplashScreen from './components/SplashScreen/SplashScreen'
 import Home from './pages/Home'
 import Search from './pages/Search'
@@ -17,7 +16,6 @@ import './App.css'
 
 function App() {
     const showLyrics = usePlayerStore(state => state.showLyrics)
-    const [showNowPlaying, setShowNowPlaying] = useState(false)
     const [showSplash, setShowSplash] = useState(true)
 
     // Initialize keyboard shortcuts
@@ -32,7 +30,6 @@ function App() {
         <div className="app">
             {showSplash && <SplashScreen onFinish={handleSplashFinish} duration={2500} />}
             {showLyrics && <LyricsOverlay />}
-            <NowPlaying isOpen={showNowPlaying} onClose={() => setShowNowPlaying(false)} />
             <div className="app-container">
                 <Sidebar />
                 <main className="main-content">
@@ -47,10 +44,11 @@ function App() {
                     </div>
                 </main>
             </div>
-            <Player onExpand={() => setShowNowPlaying(true)} />
+            <Player />
             <BottomNav />
         </div>
     )
 }
 
 export default App
+
