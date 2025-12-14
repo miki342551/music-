@@ -1,321 +1,406 @@
-/* Vista Aero Player Styles */
-.aero-player {
+/* ===== NEUMORPHIC PLAYER - ENHANCED BUTTONS ===== */
+.neo-player {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    background: #0a0a0a;
+    padding: 0 24px;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    overflow: hidden;
+}
+
+/* Empty State */
+.neo-player-empty {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-}
-
-.aero-player.empty {
-    justify-content: center;
-}
-
-.aero-player-empty {
     text-align: center;
-    color: var(--aero-text-dim);
+    color: #666;
 }
 
-.aero-player-empty-icon {
+.neo-empty-icon {
     font-size: 64px;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
     opacity: 0.5;
 }
 
-.aero-player-empty h2 {
+.neo-player-empty h2 {
     font-size: 20px;
     font-weight: 600;
+    color: #fff;
     margin-bottom: 8px;
-    color: var(--aero-text);
 }
 
-.aero-player-empty p {
+.neo-player-empty p {
     font-size: 14px;
+    color: #666;
 }
 
-/* Canvas Visualization */
-.aero-visualization {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    opacity: 0.6;
+/* Top Bar */
+.neo-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    margin-bottom: 16px;
 }
 
-/* Album Art Background Blur */
-.aero-art-bg {
-    position: absolute;
-    top: -20%;
-    left: -20%;
-    right: -20%;
-    bottom: -20%;
-    background-size: cover;
-    background-position: center;
-    filter: blur(60px) brightness(0.3) saturate(1.5);
-    z-index: 0;
-    transform: scale(1.4);
+.neo-icon-btn {
+    width: 48px;
+    height: 48px;
+    background: #1c1c1c;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.neo-icon-btn:active {
+    transform: scale(0.9);
+    background: #252525;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.neo-now-playing {
+    font-size: 13px;
+    font-weight: 600;
+    color: #aaa;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 /* Album Art */
-.aero-album-art {
-    position: relative;
-    z-index: 10;
-    width: 70%;
-    max-width: 300px;
-    aspect-ratio: 1;
-    margin-bottom: 32px;
-    transition: transform 0.1s ease-out;
+.neo-album-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 0 24px;
 }
 
-.aero-album-art img {
+.neo-album-art {
     width: 100%;
-    height: 100%;
+    max-width: 280px;
+    aspect-ratio: 1;
     object-fit: cover;
-    border-radius: 12px;
+    border-radius: 20px;
     box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.6),
-        0 0 40px rgba(0, 170, 255, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        0 25px 60px rgba(0, 0, 0, 0.6),
+        0 15px 30px rgba(0, 0, 0, 0.4);
 }
 
-.aero-album-reflection {
-    position: absolute;
-    bottom: -50%;
-    left: 5%;
-    right: 5%;
-    height: 50%;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
-    transform: scaleY(-1) perspective(500px) rotateX(30deg);
-    opacity: 0.3;
-    border-radius: 12px;
-    pointer-events: none;
+/* Track Info Card */
+.neo-track-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #161616;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* Track Info */
-.aero-track-info {
-    position: relative;
-    z-index: 10;
-    text-align: center;
-    margin-bottom: 24px;
-    padding: 0 20px;
+.neo-track-thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.aero-track-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--aero-text);
-    margin-bottom: 6px;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+.neo-track-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.neo-track-artist {
+    font-size: 12px;
+    color: #888;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.aero-track-artist {
+.neo-track-title {
     font-size: 16px;
-    color: var(--aero-text-dim);
-    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.neo-follow-btn {
+    background: linear-gradient(135deg, #2a2a2a 0%, #222 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 10px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.neo-follow-btn:active {
+    transform: scale(0.95);
+    background: #333;
 }
 
 /* Progress Bar */
-.aero-progress-container {
-    position: relative;
-    z-index: 10;
-    width: 100%;
-    max-width: 340px;
-    margin-bottom: 32px;
-    padding: 0 10px;
+.neo-progress-section {
+    margin-bottom: 28px;
 }
 
-.aero-progress-bar {
-    height: 4px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 2px;
+.neo-progress-bar {
+    height: 5px;
+    background: #2a2a2a;
+    border-radius: 3px;
     cursor: pointer;
     position: relative;
     overflow: visible;
 }
 
-.aero-progress-fill {
+.neo-progress-fill {
     height: 100%;
-    background: var(--aero-accent);
-    border-radius: 2px;
+    background: linear-gradient(90deg, #fff 0%, #e0e0e0 100%);
+    border-radius: 3px;
+    transition: width 0.1s linear;
     position: relative;
-    box-shadow: 0 0 10px var(--aero-accent-glow);
 }
 
-.aero-progress-glow {
+/* Progress Thumb */
+.neo-progress-fill::after {
+    content: '';
     position: absolute;
-    right: 0;
+    right: -6px;
     top: 50%;
     transform: translateY(-50%);
     width: 12px;
     height: 12px;
-    background: var(--aero-accent);
+    background: #fff;
     border-radius: 50%;
-    box-shadow:
-        0 0 10px var(--aero-accent),
-        0 0 20px var(--aero-accent-glow),
-        0 0 30px var(--aero-accent-glow);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-.aero-progress-time {
+.neo-time {
     display: flex;
     justify-content: space-between;
-    margin-top: 8px;
+    margin-top: 12px;
     font-size: 12px;
-    color: var(--aero-text-dim);
+    color: #777;
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
 }
 
-/* Main Controls */
-.aero-controls {
-    position: relative;
-    z-index: 10;
+/* Control Pad Area */
+.neo-controls-area {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 20px;
+    justify-content: space-between;
+    gap: 16px;
     margin-bottom: 24px;
 }
 
-.aero-control-btn {
-    background: var(--aero-glass);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid var(--aero-glass-border);
-    color: var(--aero-text);
-    width: 56px;
-    height: 56px;
+/* Side Buttons - Enhanced */
+.neo-side-btn {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(145deg, #1e1e1e 0%, #161616 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #999;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     box-shadow:
-        0 4px 20px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        6px 6px 16px rgba(0, 0, 0, 0.5),
+        -3px -3px 10px rgba(50, 50, 50, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.aero-control-btn:active {
-    transform: scale(0.92);
-}
-
-.aero-control-btn.secondary {
-    width: 48px;
-    height: 48px;
-    color: var(--aero-text-dim);
-}
-
-.aero-control-btn.secondary.active {
-    color: var(--aero-accent);
-    border-color: var(--aero-accent);
+.neo-side-btn:active {
+    transform: scale(0.88);
+    color: #fff;
     box-shadow:
-        0 0 15px var(--aero-accent-glow),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        3px 3px 8px rgba(0, 0, 0, 0.5),
+        -1px -1px 4px rgba(50, 50, 50, 0.1),
+        inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Play Button */
-.aero-play-btn {
+.neo-side-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* Circular Control Pad - Enhanced */
+.neo-control-pad {
     position: relative;
+    width: 210px;
+    height: 210px;
+    background: linear-gradient(145deg, #1a1a1a 0%, #121212 100%);
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    box-shadow:
+        12px 12px 30px rgba(0, 0, 0, 0.6),
+        -6px -6px 20px rgba(60, 60, 60, 0.1),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+/* Pad Direction Buttons - Enhanced */
+.neo-pad-btn {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(145deg, #222 0%, #1a1a1a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow:
+        4px 4px 10px rgba(0, 0, 0, 0.4),
+        -2px -2px 6px rgba(60, 60, 60, 0.08);
+}
+
+.neo-pad-btn:active {
+    color: #fff;
+    transform: scale(0.88);
+    background: linear-gradient(145deg, #2a2a2a 0%, #222 100%);
+    box-shadow:
+        2px 2px 5px rgba(0, 0, 0, 0.4),
+        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.neo-pad-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Heart Button - Special */
+.neo-pad-btn.liked {
+    color: #ff4757;
+    background: linear-gradient(145deg, #2a1a1a 0%, #1a1212 100%);
+    border-color: rgba(255, 71, 87, 0.15);
+    box-shadow:
+        4px 4px 10px rgba(0, 0, 0, 0.4),
+        -2px -2px 6px rgba(60, 60, 60, 0.08),
+        0 0 20px rgba(255, 71, 87, 0.15);
+}
+
+.neo-pad-btn.liked svg {
+    fill: #ff4757;
+}
+
+/* Position buttons around the circle */
+.neo-pad-top {
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.neo-pad-top:active {
+    transform: translateX(-50%) scale(0.88);
+}
+
+.neo-pad-left {
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.neo-pad-left:active {
+    transform: translateY(-50%) scale(0.88);
+}
+
+.neo-pad-right {
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.neo-pad-right:active {
+    transform: translateY(-50%) scale(0.88);
+}
+
+.neo-pad-bottom {
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.neo-pad-bottom:active {
+    transform: translateX(-50%) scale(0.88);
+}
+
+/* Center Play Button - Main Focus */
+.neo-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 80px;
     height: 80px;
-    background: transparent;
-    border: none;
+    background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.aero-play-btn:active {
-    transform: scale(0.95);
-}
-
-.aero-play-ring {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border: 3px solid var(--aero-accent);
-    border-radius: 50%;
-    animation: playRingPulse 2s ease-in-out infinite;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     box-shadow:
-        0 0 20px var(--aero-accent-glow),
-        0 0 40px var(--aero-accent-glow),
-        inset 0 0 20px var(--aero-accent-glow);
+        6px 6px 16px rgba(0, 0, 0, 0.5),
+        -3px -3px 10px rgba(70, 70, 70, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-@keyframes playRingPulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.05);
-        opacity: 0.8;
-    }
-}
-
-.aero-play-btn.playing .aero-play-ring {
-    animation: playRingActive 1s ease-in-out infinite;
-}
-
-@keyframes playRingActive {
-
-    0%,
-    100% {
-        transform: scale(1);
-        box-shadow:
-            0 0 20px var(--aero-accent-glow),
-            0 0 40px var(--aero-accent-glow);
-    }
-
-    50% {
-        transform: scale(1.08);
-        box-shadow:
-            0 0 30px var(--aero-accent-glow),
-            0 0 60px var(--aero-accent-glow);
-    }
-}
-
-.aero-play-inner {
-    width: 64px;
-    height: 64px;
-    background: var(--aero-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--aero-text);
+.neo-play-btn:active {
+    transform: translate(-50%, -50%) scale(0.9);
     box-shadow:
-        inset 0 2px 0 rgba(255, 255, 255, 0.2),
-        inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+        3px 3px 8px rgba(0, 0, 0, 0.5),
+        -1px -1px 4px rgba(70, 70, 70, 0.1),
+        inset 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* Spinner */
-.aero-spinner {
+.neo-play-btn svg {
+    width: 32px;
+    height: 32px;
+    margin-left: 4px;
+    /* Optical centering for play icon */
+}
+
+.neo-spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid rgba(255, 255, 255, 0.2);
-    border-top-color: var(--aero-accent);
+    border: 3px solid rgba(255, 255, 255, 0.15);
+    border-top-color: #fff;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -324,31 +409,123 @@
     }
 }
 
-/* Like Button */
-.aero-like-btn {
-    position: relative;
-    z-index: 10;
-    background: var(--aero-glass);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid var(--aero-glass-border);
-    color: var(--aero-text-dim);
-    width: 48px;
-    height: 48px;
+/* Secondary Controls - Enhanced */
+.neo-secondary-controls {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 24px;
+    margin-bottom: 16px;
+}
+
+.neo-secondary-btn {
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(145deg, #1a1a1a 0%, #141414 100%);
+    border: 1px solid rgba(255, 255, 255, 0.04);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #666;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow:
+        4px 4px 12px rgba(0, 0, 0, 0.4),
+        -2px -2px 6px rgba(50, 50, 50, 0.08);
 }
 
-.aero-like-btn:active {
-    transform: scale(0.92);
+.neo-secondary-btn:active {
+    transform: scale(0.88);
+    color: #aaa;
+    box-shadow:
+        2px 2px 6px rgba(0, 0, 0, 0.4),
+        inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.aero-like-btn.liked {
-    color: #ff6b8a;
-    border-color: #ff6b8a;
-    box-shadow: 0 0 15px rgba(255, 107, 138, 0.3);
+.neo-secondary-btn.active {
+    color: #1DB954;
+    background: linear-gradient(145deg, #1a2a1a 0%, #142014 100%);
+    border-color: rgba(29, 185, 84, 0.15);
+    box-shadow:
+        4px 4px 12px rgba(0, 0, 0, 0.4),
+        -2px -2px 6px rgba(50, 50, 50, 0.08),
+        0 0 20px rgba(29, 185, 84, 0.1);
+}
+
+.neo-secondary-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* Home Indicator */
+.neo-home-indicator {
+    width: 134px;
+    height: 5px;
+    background: #3a3a3a;
+    border-radius: 3px;
+    margin: auto auto 8px;
+}
+
+/* Responsive */
+@media (min-width: 400px) {
+    .neo-album-art {
+        max-width: 320px;
+    }
+
+    .neo-control-pad {
+        width: 230px;
+        height: 230px;
+    }
+
+    .neo-play-btn {
+        width: 88px;
+        height: 88px;
+    }
+
+    .neo-pad-btn {
+        width: 54px;
+        height: 54px;
+    }
+}
+
+@media (max-height: 700px) {
+    .neo-album-container {
+        padding: 4px 0 16px;
+    }
+
+    .neo-album-art {
+        max-width: 220px;
+    }
+
+    .neo-control-pad {
+        width: 180px;
+        height: 180px;
+    }
+
+    .neo-play-btn {
+        width: 68px;
+        height: 68px;
+    }
+
+    .neo-pad-btn {
+        width: 42px;
+        height: 42px;
+    }
+
+    .neo-track-card {
+        margin-bottom: 12px;
+    }
+
+    .neo-progress-section {
+        margin-bottom: 16px;
+    }
+
+    .neo-controls-area {
+        margin-bottom: 16px;
+    }
+
+    .neo-side-btn {
+        width: 52px;
+        height: 52px;
+    }
 }

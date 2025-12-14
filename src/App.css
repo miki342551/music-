@@ -1,227 +1,447 @@
-/* Vista Aero Theme - Dark Glassmorphism */
+/* ===== SPOTIFY DESIGN SYSTEM - ANDROID OPTIMIZED ===== */
+
 :root {
-    --aero-bg-dark: #0a0a1a;
-    --aero-bg-medium: #12122a;
-    --aero-bg-light: #1a1a3a;
-    --aero-glass: rgba(20, 20, 50, 0.6);
-    --aero-glass-border: rgba(100, 140, 255, 0.15);
-    --aero-accent: #00aaff;
-    --aero-accent-glow: rgba(0, 170, 255, 0.4);
-    --aero-text: #ffffff;
-    --aero-text-dim: rgba(255, 255, 255, 0.6);
-    --aero-chrome: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
+    /* Spotify Colors */
+    --spotify-black: #000000;
+    --spotify-base: #121212;
+    --spotify-elevated: #181818;
+    --spotify-highlight: #282828;
+    --spotify-card: #232323;
+    --spotify-green: #1DB954;
+    --spotify-green-bright: #1ed760;
+
+    /* Core Colors */
+    --bg-primary: #121212;
+    --bg-secondary: #181818;
+    --bg-tertiary: #282828;
+    --bg-elevated: #232323;
+    --bg-highlight: #333333;
+    --bg-press: #3e3e3e;
+
+    /* Accent */
+    --accent-primary: #1DB954;
+    --accent-hover: #1ed760;
+    --accent-dynamic: #1DB954;
+    --accent-glow: rgba(29, 185, 84, 0.4);
+
+    /* Text */
+    --text-primary: #FFFFFF;
+    --text-secondary: #B3B3B3;
+    --text-subdued: #6A6A6A;
+    --text-on-accent: #000000;
+
+    /* Surfaces */
+    --surface-card: rgba(255, 255, 255, 0.1);
+    --surface-hover: rgba(255, 255, 255, 0.1);
+    --surface-press: rgba(255, 255, 255, 0.07);
+
+    /* Borders */
+    --border-subtle: rgba(255, 255, 255, 0.1);
+
+    /* Spacing - Optimized for touch */
+    --space-xxs: 2px;
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+    --space-3xl: 64px;
+
+    /* Radius */
+    --radius-xs: 2px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 500px;
+
+    /* Transitions - Optimized for 60fps */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --duration-fast: 0.1s;
+    --duration-normal: 0.2s;
+    --duration-slow: 0.3s;
+
+    /* Layout - Android optimized */
+    --nav-height: 64px;
+    --header-height: 56px;
+    --player-height: 90px;
+    --sidebar-width: 280px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+
+    /* Touch targets - minimum 48px for Android */
+    --touch-target-min: 48px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    /* Font */
+    --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
-* {
+/* Reset */
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    font-size: 16px;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
-    background: var(--aero-bg-dark);
-    color: var(--aero-text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-family);
+    background: var(--bg-primary);
+    color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
+    line-height: 1.5;
+    overscroll-behavior: none;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
-/* App Container */
-.aero-app {
+/* Prevent pull-to-refresh on Android */
+html,
+body {
+    overscroll-behavior-y: contain;
+}
+
+/* ===== APP CONTAINER ===== */
+.premium-app {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background: var(--bg-primary);
 }
 
-/* Animated Background */
-.aero-bg {
+/* ===== DYNAMIC BACKGROUND ===== */
+.premium-bg {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     z-index: 0;
-    overflow: hidden;
+    pointer-events: none;
+    will-change: opacity;
+    transition: opacity 0.5s ease;
 }
 
-.aero-bg-gradient {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background:
-        radial-gradient(ellipse at 20% 20%, rgba(0, 100, 200, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 80%, rgba(100, 0, 200, 0.1) 0%, transparent 50%),
-        linear-gradient(180deg, var(--aero-bg-dark) 0%, var(--aero-bg-medium) 50%, var(--aero-bg-dark) 100%);
-    animation: aeroGradientShift 20s ease-in-out infinite;
-}
-
-@keyframes aeroGradientShift {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.8;
-    }
-}
-
-.aero-bg-particles {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image:
-        radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.1), transparent),
-        radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.08), transparent),
-        radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.12), transparent),
-        radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, 0.06), transparent);
-    background-size: 200px 100px;
-    animation: particleFloat 30s linear infinite;
-}
-
-@keyframes particleFloat {
-    0% {
-        transform: translateY(0);
-    }
-
-    100% {
-        transform: translateY(-100px);
-    }
-}
-
-/* Tab Navigation */
-.aero-tabs {
+/* ===== MAIN CONTENT ===== */
+.premium-content {
     position: relative;
-    z-index: 100;
-    display: flex;
-    justify-content: center;
-    gap: 4px;
-    padding: 16px 20px;
-    padding-top: max(16px, env(safe-area-inset-top));
-    background: var(--aero-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--aero-glass-border);
-}
-
-.aero-tab {
-    background: transparent;
-    border: none;
-    color: var(--aero-text-dim);
-    font-size: 14px;
-    font-weight: 600;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    letter-spacing: 0.3px;
-}
-
-.aero-tab:active {
-    transform: scale(0.96);
-}
-
-.aero-tab.active {
-    color: var(--aero-text);
-    background: var(--aero-glass);
-    box-shadow:
-        0 0 20px var(--aero-accent-glow),
-        0 0 40px rgba(0, 170, 255, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--aero-accent);
-}
-
-.aero-tab.active::before {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40%;
-    height: 2px;
-    background: var(--aero-accent);
-    border-radius: 1px;
-    box-shadow: 0 0 10px var(--aero-accent);
-}
-
-/* Content Area */
-.aero-content {
-    position: relative;
-    z-index: 10;
+    z-index: 1;
     flex: 1;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    padding-bottom: calc(var(--nav-height) + var(--safe-bottom));
+    /* GPU acceleration for smooth scrolling */
+    -webkit-overflow-scrolling: touch;
 }
 
-/* Glassmorphism Panels */
-.aero-panel {
-    background: var(--aero-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--aero-glass-border);
-    border-radius: 16px;
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+/* ===== BOTTOM NAVIGATION - Android Optimized ===== */
+.premium-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: calc(var(--nav-height) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: rgba(0, 0, 0, 0.95);
+    /* Android Material Design elevation */
+    box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Glowing Button Base */
-.aero-btn-glow {
-    background: var(--aero-glass);
-    border: 1px solid var(--aero-accent);
-    color: var(--aero-text);
-    border-radius: 50%;
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow:
-        0 0 15px var(--aero-accent-glow),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: color var(--duration-fast);
+    /* Ripple effect area */
+    position: relative;
+    overflow: hidden;
 }
 
-.aero-btn-glow:hover {
-    box-shadow:
-        0 0 25px var(--aero-accent-glow),
-        0 0 50px rgba(0, 170, 255, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+.nav-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity var(--duration-fast);
+    border-radius: var(--radius-lg);
 }
 
-.aero-btn-glow:active {
+.nav-item:active::before {
+    opacity: 0.1;
+}
+
+.nav-item.active {
+    color: var(--text-primary);
+}
+
+.nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    position: relative;
+    z-index: 1;
+}
+
+.nav-item span {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== SCROLLBAR - Hidden on mobile ===== */
+::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+/* ===== MINI PLAYER - Android Optimized ===== */
+.mini-player {
+    position: fixed;
+    bottom: calc(var(--nav-height) + var(--safe-bottom));
+    left: 0;
+    right: 0;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    margin: var(--space-sm);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    /* Touch feedback */
+    transition: transform var(--duration-fast), background var(--duration-fast);
+    min-height: 64px;
+    /* GPU acceleration */
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+.mini-player:active {
+    transform: scale(0.98) translateZ(0);
+    background: var(--bg-tertiary);
+}
+
+.mini-player-art {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.mini-player-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mini-player-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mini-player-artist {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Playing Indicator */
+.mini-player-indicator {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 16px;
+    margin-right: var(--space-sm);
+}
+
+.mini-player-indicator span {
+    width: 3px;
+    background: var(--accent-primary);
+    border-radius: 2px;
+}
+
+.mini-player-indicator.playing span {
+    animation: miniEq 0.5s ease-in-out infinite;
+}
+
+.mini-player-indicator span:nth-child(1) {
+    animation-delay: 0s;
+    height: 6px;
+}
+
+.mini-player-indicator span:nth-child(2) {
+    animation-delay: 0.1s;
+    height: 12px;
+}
+
+.mini-player-indicator span:nth-child(3) {
+    animation-delay: 0.2s;
+    height: 4px;
+}
+
+@keyframes miniEq {
+
+    0%,
+    100% {
+        height: 4px;
+    }
+
+    50% {
+        height: 16px;
+    }
+}
+
+/* Player Close Button - Large touch target */
+.player-close-btn {
+    position: fixed;
+    top: max(var(--space-md), var(--safe-top));
+    left: var(--space-md);
+    z-index: 1000;
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    border-radius: 50%;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.player-close-btn:active {
+    background: rgba(0, 0, 0, 0.7);
     transform: scale(0.95);
 }
 
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-    width: 6px;
+.premium-nav.hidden {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: all var(--duration-normal) var(--ease-out);
 }
 
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-/* Safe Area */
-@supports (padding-top: env(safe-area-inset-top)) {
-    .aero-tabs {
-        padding-top: max(16px, env(safe-area-inset-top));
+/* ===== ANIMATIONS - GPU Accelerated ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
     }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(16px) translateZ(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) translateZ(0);
+        opacity: 1;
+    }
+}
+
+/* ===== TOUCH FEEDBACK UTILITIES ===== */
+.touch-feedback {
+    position: relative;
+    overflow: hidden;
+}
+
+.touch-feedback::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity var(--duration-fast);
+}
+
+.touch-feedback:active::after {
+    opacity: 0.1;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (min-width: 768px) {
+    .premium-nav {
+        display: none;
+    }
+
+    .premium-content {
+        padding-bottom: 0;
+    }
+
+    .mini-player {
+        bottom: var(--space-md);
+        max-width: 400px;
+        margin: 0 auto var(--space-md);
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .mini-player:active {
+        transform: translateX(-50%) scale(0.98);
+    }
+}
+
+/* ===== ANDROID SPECIFIC OPTIMIZATIONS ===== */
+@supports (-webkit-touch-callout: none) {
+    /* iOS specific if needed */
+}
+
+/* Ensure smooth scrolling containers */
+.scroll-container {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
 }

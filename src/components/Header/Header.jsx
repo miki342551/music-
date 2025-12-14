@@ -119,7 +119,7 @@ function Header() {
     }
 
     return (
-        <header className="header glass">
+        <header className="header">
             <div className="header-nav">
                 <button
                     className="header-nav-btn"

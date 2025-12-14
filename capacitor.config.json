@@ -8,7 +8,7 @@
     "plugins": {
         "SplashScreen": {
             "launchShowDuration": 0,
-            "backgroundColor": "#0a0a15",
+            "backgroundColor": "#121212",
             "showSpinner": false,
             "androidSplashResourceName": "splash",
             "splashFullScreen": true,
@@ -19,7 +19,7 @@
         }
     },
     "android": {
-        "backgroundColor": "#0a0a15",
+        "backgroundColor": "#121212",
         "allowMixedContent": true,
         "webContentsDebuggingEnabled": false
     }

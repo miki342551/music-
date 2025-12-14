@@ -10,7 +10,61 @@ const __dirname = path.dirname(__filename)
 const app = express()
 const PORT = process.env.PORT || 3001
 
+// ========================================
+// SPOTIFY CONFIGURATION (Server-Side)
+// ========================================
 
+// Credentials from environment variables - works for ALL users
+const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || ''
+const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || ''
+
+// Single token cache (server-wide)
+let spotifyToken = {
+    accessToken: null,
+    expiresAt: 0
+}
+
+// Get Spotify access token (Client Credentials Flow)
+async function getSpotifyToken() {
+    // Return cached token if still valid (with 60s buffer)
+    if (spotifyToken.accessToken && Date.now() < spotifyToken.expiresAt - 60000) {
+        return spotifyToken.accessToken
+    }
+
+    if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
+        throw new Error('Spotify credentials not configured on server')
+    }
+
+    console.log('🔑 Refreshing Spotify token...')
+
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Basic ' + Buffer.from(SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET).toString('base64')
+        },
+        body: 'grant_type=client_credentials'
+    })
+
+    if (!response.ok) {
+        const error = await response.text()
+        throw new Error(`Spotify auth failed: ${error}`)
+    }
+
+    const data = await response.json()
+    spotifyToken = {
+        accessToken: data.access_token,
+        expiresAt: Date.now() + (data.expires_in * 1000)
+    }
+
+    console.log('✓ Spotify token refreshed')
+    return spotifyToken.accessToken
+}
+
+
+// ========================================
+// EXPRESS SETUP
+// ========================================
 
 // CORS configuration
 app.use(cors())
@@ -22,12 +76,14 @@ const YT_DLP_PATH = process.env.YT_DLP_PATH || path.join(__dirname, 'yt-dlp.exe'
 const cache = {
     search: new Map(),
     stream: new Map(),
+    spotify: new Map(),
     trending: { data: null, timestamp: 0 }
 }
 
 // Cache TTL (Time To Live)
 const SEARCH_TTL = 1000 * 60 * 60 // 1 hour
 const STREAM_TTL = 1000 * 60 * 60 // 1 hour (URLs expire)
+const SPOTIFY_TTL = 1000 * 60 * 60 // 1 hour
 const TRENDING_TTL = 1000 * 60 * 60 * 3 // 3 hours
 
 // Helper to run yt-dlp command
@@ -55,6 +111,224 @@ function runYtDlp(args) {
         })
     })
 }
+
+// ========================================
+// SPOTIFY API ENDPOINTS
+// ========================================
+
+// Spotify search - Get clean metadata from Spotify
+app.get('/api/spotify/search', async (req, res) => {
+    const { q } = req.query
+
+    if (!q) {
+        return res.status(400).json({ error: 'Query is required' })
+    }
+
+    // Check cache
+    const cacheKey = `spotify:${q.toLowerCase()}`
+    if (cache.spotify.has(cacheKey)) {
+        const { data, timestamp } = cache.spotify.get(cacheKey)
+        if (Date.now() - timestamp < SPOTIFY_TTL) {
+            console.log(`⚡ Cache hit for Spotify search: ${q}`)
+            return res.json({ results: data })
+        }
+    }
+
+    try {
+        const token = await getSpotifyToken()
+        console.log(`\n🎵 Spotify search: ${q}`)
+
+        const response = await fetch(
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=20`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+        )
+
+        if (!response.ok) {
+            throw new Error(`Spotify API error: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        const results = data.tracks.items.map(track => ({
+            spotifyId: track.id,
+            title: track.name,
+            artist: track.artists.map(a => a.name).join(', '),
+            artistId: track.artists[0]?.id,
+            album: track.album.name,
+            albumId: track.album.id,
+            thumbnail: track.album.images[0]?.url || track.album.images[1]?.url,
+            duration: Math.floor(track.duration_ms / 1000),
+            // Pre-calculate search query for YouTube matching
+            ytSearchQuery: `${track.name} ${track.artists[0]?.name || ''}`
+        }))
+
+        // Cache results
+        cache.spotify.set(cacheKey, { data: results, timestamp: Date.now() })
+
+        // Prune cache
+        if (cache.spotify.size > 100) {
+            const firstKey = cache.spotify.keys().next().value
+            cache.spotify.delete(firstKey)
+        }
+
+        console.log(`📋 Found ${results.length} Spotify results`)
+        res.json({ results })
+    } catch (error) {
+        console.error('Spotify search error:', error.message)
+        // Fallback to YouTube search if Spotify fails
+        res.status(500).json({ error: 'Spotify search failed', fallback: true })
+    }
+})
+
+// Match Spotify track to YouTube video for streaming
+app.get('/api/spotify/match', async (req, res) => {
+    const { title, artist } = req.query
+
+    if (!title) {
+        return res.status(400).json({ error: 'Title is required' })
+    }
+
+    const searchQuery = artist ? `${title} ${artist}` : title
+
+    // Check cache
+    const cacheKey = `match:${searchQuery.toLowerCase()}`
+    if (cache.search.has(cacheKey)) {
+        const { data, timestamp } = cache.search.get(cacheKey)
+        if (Date.now() - timestamp < SEARCH_TTL) {
+            console.log(`⚡ Cache hit for match: ${searchQuery}`)
+            return res.json(data)
+        }
+    }
+
+    try {
+        console.log(`\n🔗 Matching to YouTube: ${searchQuery}`)
+
+        // Search for first result only
+        const args = [
+            `ytsearch1:${searchQuery}`,
+            '--dump-json',
+            '--flat-playlist',
+            '--no-warnings',
+            '--default-search', 'ytsearch'
+        ]
+
+        const output = await runYtDlp(args)
+        const lines = output.trim().split('\n').filter(l => l)
+
+        if (lines.length === 0) {
+            return res.status(404).json({ error: 'No match found' })
+        }
+
+        const item = JSON.parse(lines[0])
+        const result = {
+            videoId: item.id,
+            ytTitle: item.title,
+            ytArtist: item.uploader || item.artist || 'Unknown'
+        }
+
+        // Cache result
+        cache.search.set(cacheKey, { data: result, timestamp: Date.now() })
+
+        console.log(`✓ Matched to: ${item.id} - ${item.title}`)
+        res.json(result)
+    } catch (error) {
+        console.error('Match error:', error.message)
+        res.status(500).json({ error: 'Failed to match track' })
+    }
+})
+
+// Get related tracks from Spotify (for radio feature)
+app.get('/api/spotify/related/:spotifyId', async (req, res) => {
+    const { spotifyId } = req.params
+
+    try {
+        const token = await getSpotifyToken()
+        console.log(`\n📻 Getting related tracks for: ${spotifyId}`)
+
+        // Get recommendations based on seed track
+        const response = await fetch(
+            `https://api.spotify.com/v1/recommendations?seed_tracks=${spotifyId}&limit=20`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+        )
+
+        if (!response.ok) {
+            throw new Error(`Spotify API error: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        const results = data.tracks.map(track => ({
+            spotifyId: track.id,
+            title: track.name,
+            artist: track.artists.map(a => a.name).join(', '),
+            album: track.album.name,
+            thumbnail: track.album.images[0]?.url || track.album.images[1]?.url,
+            duration: Math.floor(track.duration_ms / 1000),
+            ytSearchQuery: `${track.name} ${track.artists[0]?.name || ''}`
+        }))
+
+        console.log(`📋 Found ${results.length} related tracks`)
+        res.json({ results })
+    } catch (error) {
+        console.error('Related tracks error:', error.message)
+        res.status(500).json({ error: 'Failed to get related tracks', results: [] })
+    }
+})
+
+// Get Spotify trending/new releases for home page
+app.get('/api/spotify/trending', async (req, res) => {
+    try {
+        const token = await getSpotifyToken()
+        console.log('\n📈 Getting Spotify new releases')
+
+        const response = await fetch(
+            `https://api.spotify.com/v1/browse/new-releases?limit=20`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+        )
+
+        if (!response.ok) {
+            throw new Error(`Spotify API error: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        // Get first track from each album
+        const albumPromises = data.albums.items.slice(0, 10).map(async album => {
+            try {
+                const tracksRes = await fetch(
+                    `https://api.spotify.com/v1/albums/${album.id}/tracks?limit=1`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                )
+                const tracksData = await tracksRes.json()
+                const track = tracksData.items[0]
+                if (!track) return null
+
+                return {
+                    spotifyId: track.id,
+                    title: track.name,
+                    artist: track.artists.map(a => a.name).join(', '),
+                    album: album.name,
+                    thumbnail: album.images[0]?.url,
+                    duration: Math.floor(track.duration_ms / 1000),
+                    ytSearchQuery: `${track.name} ${track.artists[0]?.name || ''}`
+                }
+            } catch {
+                return null
+            }
+        })
+
+        const results = (await Promise.all(albumPromises)).filter(r => r)
+        console.log(`📋 Got ${results.length} trending tracks`)
+        res.json({ results })
+    } catch (error) {
+        console.error('Spotify trending error:', error.message)
+        res.status(500).json({ error: 'Failed to get trending', results: [] })
+    }
+})
+
+// ========================================
+// YOUTUBE/YT-DLP ENDPOINTS (Original)
+// ========================================
 
 // Search endpoint
 app.get('/api/search', async (req, res) => {

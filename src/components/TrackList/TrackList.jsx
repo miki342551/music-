@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { usePlayerStore } from '../../store/playerStore'
 import { useLibraryStore } from '../../store/libraryStore'
 import { formatDuration } from '../../services/musicApi'
@@ -24,6 +25,11 @@ const Icons = {
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
         </svg>
     ),
+    Radio: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3.24 6.15C2.51 6.43 2 7.17 2 8v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8c0-1.11-.89-2-2-2H8.3l8.26-3.34L15.88 1 3.24 6.15zM7 20c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm13-8h-2v-2h-2v2H4V8h16v4z" />
+        </svg>
+    ),
     MoreVert: () => (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
@@ -38,9 +44,17 @@ const Icons = {
     )
 }
 
-function TrackList({ tracks, showIndex = true, showAlbum = false }) {
-    const { currentTrack, isPlaying, playTrack, setQueue, togglePlay } = usePlayerStore()
+function TrackList({ tracks, showIndex = true, showAlbum = true, onArtistClick }) {
+    const { currentTrack, isPlaying, playTrack, setQueue, togglePlay, startRadio, addToQueue } = usePlayerStore()
     const { isLiked, toggleLike, addToRecentlyPlayed } = useLibraryStore()
+    const [contextMenu, setContextMenu] = useState(null)
+
+    const handleArtistClick = (e, artist) => {
+        e.stopPropagation()
+        if (onArtistClick && artist) {
+            onArtistClick(artist)
+        }
+    }
 
     const handlePlay = (track, index) => {
         if (currentTrack?.videoId === track.videoId) {
@@ -103,7 +117,12 @@ function TrackList({ tracks, showIndex = true, showAlbum = false }) {
                                     <span className={`track-title ${isCurrentTrack ? 'playing' : ''}`}>
                                         {track.title}
                                     </span>
-                                    <span className="track-artist">{track.artist}</span>
+                                    <span
+                                        className={`track-artist ${onArtistClick ? 'clickable' : ''}`}
+                                        onClick={(e) => handleArtistClick(e, track.artist)}
+                                    >
+                                        {track.artist}
+                                    </span>
                                 </div>
                             </div>
 
@@ -120,15 +139,62 @@ function TrackList({ tracks, showIndex = true, showAlbum = false }) {
                                 >
                                     {liked ? <Icons.HeartFilled /> : <Icons.Heart />}
                                 </button>
-                                <span className="track-duration">{formatDuration(track.duration)}</span>
-                                <button className="track-more-btn">
-                                    <Icons.MoreVert />
+                                <button
+                                    className="track-radio-btn"
+                                    onClick={(e) => { e.stopPropagation(); startRadio(track) }}
+                                    title="Start Radio"
+                                >
+                                    <Icons.Radio />
                                 </button>
+                                <span className="track-duration">{formatDuration(track.duration)}</span>
+                                <div className="track-more-wrapper">
+                                    <button
+                                        className="track-more-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setContextMenu(contextMenu === index ? null : index)
+                                        }}
+                                    >
+                                        <Icons.MoreVert />
+                                    </button>
+                                    {contextMenu === index && (
+                                        <div className="track-context-menu">
+                                            <button onClick={(e) => {
+                                                e.stopPropagation()
+                                                addToQueue(track)
+                                                setContextMenu(null)
+                                            }}>
+                                                ➕ Add to Queue
+                                            </button>
+                                            <button onClick={(e) => {
+                                                e.stopPropagation()
+                                                startRadio(track)
+                                                setContextMenu(null)
+                                            }}>
+                                                📻 Start Radio
+                                            </button>
+                                            <button onClick={(e) => {
+                                                e.stopPropagation()
+                                                toggleLike(track)
+                                                setContextMenu(null)
+                                            }}>
+                                                {liked ? '💔 Remove from Liked' : '❤️ Add to Liked'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )
                 })}
             </div>
+            {/* Close context menu when clicking outside */}
+            {contextMenu !== null && (
+                <div
+                    className="context-menu-overlay"
+                    onClick={() => setContextMenu(null)}
+                />
+            )}
         </div>
     )
 }

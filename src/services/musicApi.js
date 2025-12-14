@@ -1,30 +1,71 @@
-// Music API Service - Handles search and stream fetching
+// Music API Service - Uses Spotify for metadata, YouTube/yt-dlp for streaming
+// Server uses environment variables for Spotify - works automatically for all users
 
 const API_BASE = 'https://music-production-4deb.up.railway.app/api'
 
-// Search for tracks
+// ========================================
+// SEARCH (Spotify Primary, YouTube Fallback)
+// ========================================
+
+// Search for tracks - Uses Spotify metadata for clean results
 export async function searchTracks(query) {
+    try {
+        // Try Spotify first for cleaner metadata
+        const response = await fetch(`${API_BASE}/spotify/search?q=${encodeURIComponent(query)}`)
+        const data = await response.json()
+
+        if (data.results && data.results.length > 0) {
+            return data.results
+        }
+
+        // Fallback to YouTube if Spotify returns nothing
+        console.log('Spotify returned no results, falling back to YouTube')
+        return await searchTracksYouTube(query)
+    } catch (error) {
+        console.error('Spotify search error, falling back to YouTube:', error)
+        return await searchTracksYouTube(query)
+    }
+}
+
+// Direct YouTube search (fallback/legacy)
+export async function searchTracksYouTube(query) {
     try {
         const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`)
         const data = await response.json()
         return data.results || []
     } catch (error) {
-        console.error('Search error:', error)
+        console.error('YouTube search error:', error)
         return []
     }
 }
 
-// Get search suggestions
-export async function getSearchSuggestions(query) {
+// ========================================
+// MATCHING (Spotify -> YouTube)
+// ========================================
+
+// Match a track to YouTube for streaming
+export async function matchToYouTube(title, artist) {
     try {
-        const response = await fetch(`${API_BASE}/suggestions?q=${encodeURIComponent(query)}`)
+        const params = new URLSearchParams({ title })
+        if (artist) params.append('artist', artist)
+
+        const response = await fetch(`${API_BASE}/spotify/match?${params}`)
         const data = await response.json()
-        return data.suggestions || []
+
+        if (!data.videoId) {
+            throw new Error('No YouTube match found')
+        }
+
+        return data
     } catch (error) {
-        console.error('Suggestions error:', error)
-        return []
+        console.error('Match error:', error)
+        throw error
     }
 }
+
+// ========================================
+// STREAMING (YouTube/yt-dlp)
+// ========================================
 
 // Get stream URL for a video ID
 export async function getStreamUrl(videoId) {
@@ -38,29 +79,88 @@ export async function getStreamUrl(videoId) {
     }
 }
 
-// Get related tracks (for radio feature)
-export async function getRelatedTracks(videoId) {
+// ========================================
+// RELATED TRACKS (Spotify Recommendations)
+// ========================================
+
+// Get related tracks - Uses Spotify for better recommendations
+export async function getRelatedTracks(track) {
     try {
-        const response = await fetch(`${API_BASE}/related/${videoId}`)
-        const data = await response.json()
-        return data.results || []
+        // If track has spotifyId, use Spotify recommendations
+        if (track.spotifyId) {
+            const response = await fetch(`${API_BASE}/spotify/related/${track.spotifyId}`)
+            const data = await response.json()
+            return data.results || []
+        }
+
+        // Fallback to YouTube related
+        if (track.videoId) {
+            const response = await fetch(`${API_BASE}/related/${track.videoId}`)
+            const data = await response.json()
+            return data.results || []
+        }
+
+        return []
     } catch (error) {
         console.error('Related tracks error:', error)
         return []
     }
 }
 
-// Get trending/popular tracks
+// ========================================
+// TRENDING/HOME (Spotify New Releases)
+// ========================================
+
+// Get trending/popular tracks - Uses Spotify new releases
 export async function getTrendingTracks() {
+    try {
+        // Try Spotify trending first
+        const response = await fetch(`${API_BASE}/spotify/trending`)
+        const data = await response.json()
+
+        if (data.results && data.results.length > 0) {
+            return data.results
+        }
+
+        // Fallback to YouTube trending
+        return await getTrendingTracksYouTube()
+    } catch (error) {
+        console.error('Spotify trending error, falling back to YouTube:', error)
+        return await getTrendingTracksYouTube()
+    }
+}
+
+// YouTube trending fallback
+async function getTrendingTracksYouTube() {
     try {
         const response = await fetch(`${API_BASE}/trending`)
         const data = await response.json()
         return data.results || []
     } catch (error) {
-        console.error('Trending error:', error)
+        console.error('YouTube trending error:', error)
         return []
     }
 }
+
+// ========================================
+// SUGGESTIONS
+// ========================================
+
+// Get search suggestions
+export async function getSearchSuggestions(query) {
+    try {
+        const response = await fetch(`${API_BASE}/suggestions?q=${encodeURIComponent(query)}`)
+        const data = await response.json()
+        return data.suggestions || []
+    } catch (error) {
+        console.error('Suggestions error:', error)
+        return []
+    }
+}
+
+// ========================================
+// TRACK DETAILS
+// ========================================
 
 // Get track details
 export async function getTrackDetails(videoId) {
@@ -73,6 +173,10 @@ export async function getTrackDetails(videoId) {
         return null
     }
 }
+
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
 
 // Format duration from seconds to mm:ss
 export function formatDuration(seconds) {

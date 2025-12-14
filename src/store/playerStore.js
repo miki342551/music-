@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { getRelatedTracks } from '../services/musicApi'
 
 // Audio element singleton
 let audioElement = null
@@ -37,6 +38,7 @@ export const usePlayerStore = create(
             showLyrics: false,
             isLoading: false,
             error: null,
+            radioMode: false, // When true, auto-adds related tracks
 
             // Initialize audio listeners
             initAudio: () => {
@@ -64,18 +66,68 @@ export const usePlayerStore = create(
             },
 
             // Play a track with retry mechanism
+            // Handles both Spotify tracks (need YouTube matching) and YouTube tracks (have videoId)
             playTrack: async (track, addToQueue = false) => {
                 const audio = getAudio()
                 set({ isLoading: true, error: null, currentTrack: track })
 
                 const MAX_RETRIES = 3
                 let lastError = null
+                let videoId = track.videoId
+
+                // If track doesn't have videoId, match it to YouTube first (Spotify track)
+                if (!videoId && track.spotifyId) {
+                    try {
+                        console.log('🔗 Matching Spotify track to YouTube:', track.title)
+                        const matchResponse = await fetch(
+                            `https://music-production-4deb.up.railway.app/api/spotify/match?title=${encodeURIComponent(track.title)}&artist=${encodeURIComponent(track.artist || '')}`,
+                            { signal: AbortSignal.timeout(15000) }
+                        )
+                        const matchData = await matchResponse.json()
+
+                        if (matchData.videoId) {
+                            videoId = matchData.videoId
+                            // Update track with videoId for future use
+                            track = { ...track, videoId }
+                            set({ currentTrack: track })
+                        } else {
+                            throw new Error('No YouTube match found')
+                        }
+                    } catch (error) {
+                        console.error('Failed to match Spotify track:', error)
+                        set({ error: 'Could not find playable version', isLoading: false })
+                        return
+                    }
+                }
+
+                // If still no videoId, try using ytSearchQuery (fallback for Spotify tracks)
+                if (!videoId && track.ytSearchQuery) {
+                    try {
+                        const matchResponse = await fetch(
+                            `https://music-production-4deb.up.railway.app/api/spotify/match?title=${encodeURIComponent(track.ytSearchQuery)}`,
+                            { signal: AbortSignal.timeout(15000) }
+                        )
+                        const matchData = await matchResponse.json()
+                        if (matchData.videoId) {
+                            videoId = matchData.videoId
+                            track = { ...track, videoId }
+                            set({ currentTrack: track })
+                        }
+                    } catch (error) {
+                        console.error('Fallback match failed:', error)
+                    }
+                }
+
+                if (!videoId) {
+                    set({ error: 'No playable source found', isLoading: false })
+                    return
+                }
 
                 for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
                     try {
                         // Get stream URL from API
                         const response = await fetch(
-                            `https://music-production-4deb.up.railway.app/api/stream/${track.videoId}`,
+                            `https://music-production-4deb.up.railway.app/api/stream/${videoId}`,
                             { signal: AbortSignal.timeout(15000) } // 15 second timeout
                         )
                         const data = await response.json()
@@ -147,7 +199,7 @@ export const usePlayerStore = create(
                 }, 2000)
             },
 
-            // Prefetch next track
+            // Prefetch next track (handles both YouTube and Spotify tracks)
             prefetchNext: () => {
                 const { queue, queueIndex, shuffle, repeat } = get()
                 let nextIndex = queueIndex + 1
@@ -157,13 +209,25 @@ export const usePlayerStore = create(
                     // For now, let's just prefetch the next linear one as a fallback
                 }
 
+                const prefetchTrack = async (track) => {
+                    if (!track) return
+                    console.log('Prefetching:', track.title)
+
+                    // If track has videoId, prefetch stream directly
+                    if (track.videoId) {
+                        fetch(`https://music-production-4deb.up.railway.app/api/stream/${track.videoId}`).catch(() => { })
+                    }
+                    // If Spotify track without videoId, prefetch the match (which caches the result)
+                    else if (track.spotifyId || track.ytSearchQuery) {
+                        const query = track.ytSearchQuery || `${track.title} ${track.artist || ''}`
+                        fetch(`https://music-production-4deb.up.railway.app/api/spotify/match?title=${encodeURIComponent(query)}`).catch(() => { })
+                    }
+                }
+
                 if (nextIndex < queue.length) {
-                    const nextTrack = queue[nextIndex]
-                    console.log('Prefetching:', nextTrack.title)
-                    fetch(`https://music-production-4deb.up.railway.app/api/stream/${nextTrack.videoId}`).catch(() => { })
+                    prefetchTrack(queue[nextIndex])
                 } else if (repeat === 'all' && queue.length > 0) {
-                    const nextTrack = queue[0]
-                    fetch(`https://music-production-4deb.up.railway.app/api/stream/${nextTrack.videoId}`).catch(() => { })
+                    prefetchTrack(queue[0])
                 }
             },
 
@@ -275,6 +339,37 @@ export const usePlayerStore = create(
             addToQueue: (track) => {
                 const { queue } = get()
                 set({ queue: [...queue, track] })
+            },
+
+            // Start Radio mode - plays track and loads related tracks
+            startRadio: async (track) => {
+                console.log('📻 Starting radio for:', track.title)
+                set({ radioMode: true, isLoading: true })
+
+                try {
+                    // Play the seed track first
+                    await get().playTrack(track)
+
+                    // Get related tracks from Spotify recommendations
+                    const relatedTracks = await getRelatedTracks(track)
+
+                    if (relatedTracks.length > 0) {
+                        // Set queue with seed track + related tracks
+                        set({
+                            queue: [track, ...relatedTracks],
+                            queueIndex: 0
+                        })
+                        console.log(`📻 Radio loaded ${relatedTracks.length} tracks`)
+                    }
+                } catch (error) {
+                    console.error('Radio error:', error)
+                    set({ radioMode: false })
+                }
+            },
+
+            // Stop Radio mode
+            stopRadio: () => {
+                set({ radioMode: false })
             },
 
             // Toggle shuffle
