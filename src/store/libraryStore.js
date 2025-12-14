@@ -14,16 +14,27 @@ export const useLibraryStore = create(
             // Recently played
             recentlyPlayed: [],
 
+            // Get unique track ID (prefer spotifyId, fallback to videoId)
+            getTrackId: (track) => track?.spotifyId || track?.videoId,
+
             // Check if song is liked
-            isLiked: (videoId) => {
-                return get().likedSongs.some(song => song.videoId === videoId)
+            isLiked: (trackOrId) => {
+                const { likedSongs, getTrackId } = get()
+                // Support both passing a track object or just an ID
+                const id = typeof trackOrId === 'string' ? trackOrId : getTrackId(trackOrId)
+                if (!id) return false
+                return likedSongs.some(song => getTrackId(song) === id)
             },
 
             // Toggle like
             toggleLike: (track) => {
-                const { likedSongs, isLiked } = get()
-                if (isLiked(track.videoId)) {
-                    set({ likedSongs: likedSongs.filter(s => s.videoId !== track.videoId) })
+                const { likedSongs, getTrackId } = get()
+                const trackId = getTrackId(track)
+                if (!trackId) return // Can't like a track without ID
+
+                const isCurrentlyLiked = likedSongs.some(s => getTrackId(s) === trackId)
+                if (isCurrentlyLiked) {
+                    set({ likedSongs: likedSongs.filter(s => getTrackId(s) !== trackId) })
                 } else {
                     set({ likedSongs: [{ ...track, likedAt: Date.now() }, ...likedSongs] })
                 }
@@ -31,8 +42,11 @@ export const useLibraryStore = create(
 
             // Add to recently played
             addToRecentlyPlayed: (track) => {
-                const { recentlyPlayed } = get()
-                const filtered = recentlyPlayed.filter(t => t.videoId !== track.videoId)
+                const { recentlyPlayed, getTrackId } = get()
+                const trackId = getTrackId(track)
+                if (!trackId) return
+
+                const filtered = recentlyPlayed.filter(t => getTrackId(t) !== trackId)
                 const updated = [{ ...track, playedAt: Date.now() }, ...filtered].slice(0, 50)
                 set({ recentlyPlayed: updated })
             },

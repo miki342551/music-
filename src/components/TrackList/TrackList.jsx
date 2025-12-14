@@ -49,6 +49,9 @@ function TrackList({ tracks, showIndex = true, showAlbum = true, onArtistClick }
     const { isLiked, toggleLike, addToRecentlyPlayed } = useLibraryStore()
     const [contextMenu, setContextMenu] = useState(null)
 
+    // Get unique track identifier (prefer spotifyId, fallback to videoId)
+    const getTrackId = (track) => track?.spotifyId || track?.videoId
+
     const handleArtistClick = (e, artist) => {
         e.stopPropagation()
         if (onArtistClick && artist) {
@@ -57,7 +60,10 @@ function TrackList({ tracks, showIndex = true, showAlbum = true, onArtistClick }
     }
 
     const handlePlay = (track, index) => {
-        if (currentTrack?.videoId === track.videoId) {
+        const currentId = getTrackId(currentTrack)
+        const trackId = getTrackId(track)
+
+        if (currentId && trackId && currentId === trackId) {
             togglePlay()
         } else {
             setQueue(tracks, index)
@@ -84,12 +90,14 @@ function TrackList({ tracks, showIndex = true, showAlbum = true, onArtistClick }
 
             <div className="track-list-body">
                 {tracks.map((track, index) => {
-                    const isCurrentTrack = currentTrack?.videoId === track.videoId
-                    const liked = isLiked(track.videoId)
+                    const trackId = getTrackId(track)
+                    const currentId = getTrackId(currentTrack)
+                    const isCurrentTrack = trackId && currentId && trackId === currentId
+                    const liked = isLiked(track)
 
                     return (
                         <div
-                            key={track.videoId || index}
+                            key={trackId || `track-${index}`}
                             className={`track-item ${isCurrentTrack ? 'active' : ''}`}
                             onDoubleClick={() => handlePlay(track, index)}
                         >
