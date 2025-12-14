@@ -510,6 +510,20 @@
     text-overflow: ellipsis;
 }
 
+.radio-mix-count {
+    display: block;
+    font-size: 11px;
+    color: var(--text-subdued);
+    margin-top: 2px;
+}
+
+.aero-empty-hint {
+    font-size: 14px;
+    color: var(--text-subdued);
+    text-align: center;
+    padding: var(--space-lg);
+}
+
 /* ========== ARTIST/ALBUM PAGE ========== */
 .artist-page,
 .album-page {

@@ -237,6 +237,69 @@ app.get('/api/spotify/match', async (req, res) => {
     }
 })
 
+// Get personalized "Made For You" recommendations
+app.get('/api/spotify/made-for-you', async (req, res) => {
+    const { seeds, type = 'default' } = req.query
+
+    if (!seeds) {
+        return res.status(400).json({ error: 'Seed tracks required' })
+    }
+
+    try {
+        const token = await getSpotifyToken()
+        console.log(`\n🎯 Getting Made For You: ${type}`)
+
+        // Build recommendations URL with audio features based on type
+        let params = `seed_tracks=${encodeURIComponent(seeds)}&limit=25`
+
+        // Customize based on mix type
+        switch (type) {
+            case 'chill':
+                params += '&target_energy=0.4&target_valence=0.5&target_tempo=100'
+                break
+            case 'energetic':
+                params += '&target_energy=0.8&target_danceability=0.7&target_tempo=130'
+                break
+            case 'discovery':
+                params += '&min_popularity=20&max_popularity=60' // Less mainstream
+                break
+            case 'focus':
+                params += '&target_instrumentalness=0.5&target_energy=0.5&target_tempo=110'
+                break
+            default:
+                // Default mix - balanced
+                break
+        }
+
+        const response = await fetch(
+            `https://api.spotify.com/v1/recommendations?${params}`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+        )
+
+        if (!response.ok) {
+            throw new Error(`Spotify API error: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        const results = data.tracks.map(track => ({
+            spotifyId: track.id,
+            title: track.name,
+            artist: track.artists.map(a => a.name).join(', '),
+            album: track.album.name,
+            thumbnail: track.album.images[0]?.url || track.album.images[1]?.url,
+            duration: Math.floor(track.duration_ms / 1000),
+            ytSearchQuery: `${track.name} ${track.artists[0]?.name || ''}`
+        }))
+
+        console.log(`📋 Made For You: ${results.length} tracks`)
+        res.json({ results })
+    } catch (error) {
+        console.error('Made For You error:', error.message)
+        res.status(500).json({ error: 'Failed to get recommendations', results: [] })
+    }
+})
+
 // Get related tracks from Spotify (for radio feature)
 app.get('/api/spotify/related/:spotifyId', async (req, res) => {
     const { spotifyId } = req.params

@@ -107,6 +107,33 @@ export async function getRelatedTracks(track) {
     }
 }
 
+// Get personalized "Made For You" recommendations
+// type: 'default', 'chill', 'energetic', 'discovery', 'focus'
+export async function getMadeForYou(seedTracks, type = 'default') {
+    try {
+        // Get spotifyIds from seed tracks (up to 5)
+        const seeds = seedTracks
+            .filter(t => t.spotifyId)
+            .slice(0, 5)
+            .map(t => t.spotifyId)
+            .join(',')
+
+        if (!seeds) {
+            console.log('No Spotify IDs for Made For You, using search fallback')
+            return []
+        }
+
+        const response = await fetch(
+            `${API_BASE}/spotify/made-for-you?seeds=${encodeURIComponent(seeds)}&type=${type}`
+        )
+        const data = await response.json()
+        return data.results || []
+    } catch (error) {
+        console.error('Made For You error:', error)
+        return []
+    }
+}
+
 // ========================================
 // TRENDING/HOME (Spotify New Releases)
 // ========================================

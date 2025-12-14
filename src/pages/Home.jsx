@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useLibraryStore } from '../store/libraryStore'
 import { usePlayerStore } from '../store/playerStore'
-import { getTrendingTracks, searchTracks, getRelatedTracks } from '../services/musicApi'
+import { getTrendingTracks, searchTracks, getRelatedTracks, getMadeForYou } from '../services/musicApi'
 import TrackList from '../components/TrackList/TrackList'
 import Skeleton from '../components/Skeleton/Skeleton'
 import './Pages.css'
 
 function Home() {
     const { recentlyPlayed, likedSongs } = useLibraryStore()
-    const { setQueue, startRadio } = usePlayerStore()
+    const { setQueue, startRadio, playTrack } = usePlayerStore()
     const [trending, setTrending] = useState([])
     const [loading, setLoading] = useState(true)
+    const [madeForYouMixes, setMadeForYouMixes] = useState([])
+    const [mixesLoading, setMixesLoading] = useState(true)
 
     useEffect(() => {
         const fetchTrending = async () => {
@@ -26,70 +28,106 @@ function Home() {
         fetchTrending()
     }, [])
 
-    // Generate personalized radio mixes based on user's history
-    const generateRadioMixes = () => {
-        const mixes = []
+    // Fetch personalized "Made For You" mixes from Spotify
+    useEffect(() => {
+        const fetchMadeForYou = async () => {
+            setMixesLoading(true)
+            const mixes = []
 
-        // Mix based on recently played
-        if (recentlyPlayed.length > 0) {
-            const seedTrack = recentlyPlayed[0]
-            mixes.push({
-                id: 'recent-mix',
-                title: 'Your Mix',
-                subtitle: 'Based on recent listens',
-                seedTrack,
-                gradient: 'linear-gradient(135deg, #1DB954 0%, #191414 100%)',
-                thumbnail: seedTrack.thumbnail
-            })
+            // Get seed tracks from liked songs and recently played
+            const seedTracks = [
+                ...likedSongs.slice(0, 3),
+                ...recentlyPlayed.filter(t => t.spotifyId).slice(0, 2)
+            ]
+
+            if (seedTracks.length === 0) {
+                // No history - use trending as seeds
+                if (trending.length > 0) {
+                    const discoverMix = await getMadeForYou(trending.slice(0, 5), 'discovery')
+                    if (discoverMix.length > 0) {
+                        mixes.push({
+                            id: 'discover',
+                            title: 'Discover Weekly',
+                            subtitle: 'New music for you',
+                            tracks: discoverMix,
+                            gradient: 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)',
+                            thumbnail: discoverMix[0]?.thumbnail
+                        })
+                    }
+                }
+                setMadeForYouMixes(mixes)
+                setMixesLoading(false)
+                return
+            }
+
+            // Your Mix - Based on your taste
+            const yourMix = await getMadeForYou(seedTracks, 'default')
+            if (yourMix.length > 0) {
+                mixes.push({
+                    id: 'your-mix',
+                    title: 'Your Mix',
+                    subtitle: 'Made for you',
+                    tracks: yourMix,
+                    gradient: 'linear-gradient(135deg, #1DB954 0%, #191414 100%)',
+                    thumbnail: yourMix[0]?.thumbnail
+                })
+            }
+
+            // Chill Mix
+            const chillMix = await getMadeForYou(seedTracks, 'chill')
+            if (chillMix.length > 0) {
+                mixes.push({
+                    id: 'chill-mix',
+                    title: 'Chill Mix',
+                    subtitle: 'Relax and unwind',
+                    tracks: chillMix,
+                    gradient: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
+                    thumbnail: chillMix[0]?.thumbnail
+                })
+            }
+
+            // Discover Mix - Less mainstream
+            const discoverMix = await getMadeForYou(seedTracks, 'discovery')
+            if (discoverMix.length > 0) {
+                mixes.push({
+                    id: 'discover',
+                    title: 'Discover Weekly',
+                    subtitle: 'Hidden gems for you',
+                    tracks: discoverMix,
+                    gradient: 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)',
+                    thumbnail: discoverMix[0]?.thumbnail
+                })
+            }
+
+            // Energy Mix
+            const energyMix = await getMadeForYou(seedTracks, 'energetic')
+            if (energyMix.length > 0) {
+                mixes.push({
+                    id: 'energy-mix',
+                    title: 'Energy Boost',
+                    subtitle: 'Get pumped up',
+                    tracks: energyMix,
+                    gradient: 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)',
+                    thumbnail: energyMix[0]?.thumbnail
+                })
+            }
+
+            setMadeForYouMixes(mixes)
+            setMixesLoading(false)
         }
 
-        // Mix based on liked songs
-        if (likedSongs.length > 0) {
-            const seedTrack = likedSongs[0]
-            mixes.push({
-                id: 'liked-mix',
-                title: 'Liked Radio',
-                subtitle: 'Songs you love',
-                seedTrack,
-                gradient: 'linear-gradient(135deg, #E91E63 0%, #9C27B0 100%)',
-                thumbnail: seedTrack.thumbnail
-            })
+        // Only fetch when we have seed data
+        if (likedSongs.length > 0 || recentlyPlayed.length > 0 || trending.length > 0) {
+            fetchMadeForYou()
+        } else {
+            setMixesLoading(false)
         }
+    }, [likedSongs.length, recentlyPlayed.length, trending.length])
 
-        // Discovery mix - random from trending
-        if (trending.length > 0) {
-            const seedTrack = trending[Math.floor(Math.random() * trending.length)]
-            mixes.push({
-                id: 'discover-mix',
-                title: 'Discover Weekly',
-                subtitle: 'New music for you',
-                seedTrack,
-                gradient: 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)',
-                thumbnail: seedTrack?.thumbnail || null
-            })
-        }
-
-        // Chill mix
-        if (recentlyPlayed.length > 2) {
-            const seedTrack = recentlyPlayed[2]
-            mixes.push({
-                id: 'chill-mix',
-                title: 'Chill Mix',
-                subtitle: 'Relax and unwind',
-                seedTrack,
-                gradient: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
-                thumbnail: seedTrack.thumbnail
-            })
-        }
-
-        return mixes
-    }
-
-    const radioMixes = generateRadioMixes()
-
-    const handleRadioMix = (mix) => {
-        if (mix.seedTrack) {
-            startRadio(mix.seedTrack)
+    const handleMixClick = (mix) => {
+        if (mix.tracks && mix.tracks.length > 0) {
+            setQueue(mix.tracks, 0)
+            playTrack(mix.tracks[0])
         }
     }
 
@@ -136,16 +174,24 @@ function Home() {
                 ))}
             </section>
 
-            {/* Made For You - Radio Mixes */}
-            {radioMixes.length > 0 && (
-                <section className="aero-section">
-                    <h2 className="aero-section-title">Made For You</h2>
+            {/* Made For You - Spotify Personalized Mixes */}
+            <section className="aero-section">
+                <h2 className="aero-section-title">Made For You</h2>
+                {mixesLoading ? (
                     <div className="home-horizontal-scroll">
-                        {radioMixes.map((mix) => (
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="radio-mix-card">
+                                <Skeleton height={140} style={{ borderRadius: '12px' }} />
+                            </div>
+                        ))}
+                    </div>
+                ) : madeForYouMixes.length > 0 ? (
+                    <div className="home-horizontal-scroll">
+                        {madeForYouMixes.map((mix) => (
                             <div
                                 key={mix.id}
                                 className="radio-mix-card"
-                                onClick={() => handleRadioMix(mix)}
+                                onClick={() => handleMixClick(mix)}
                             >
                                 <div
                                     className="radio-mix-artwork"
@@ -155,16 +201,19 @@ function Home() {
                                         <img src={mix.thumbnail} alt="" />
                                     )}
                                     <div className="radio-mix-overlay">
-                                        <span className="radio-icon">📻</span>
+                                        <span className="radio-icon">🎵</span>
                                     </div>
                                 </div>
                                 <span className="radio-mix-title">{mix.title}</span>
                                 <span className="radio-mix-subtitle">{mix.subtitle}</span>
+                                <span className="radio-mix-count">{mix.tracks?.length || 0} songs</span>
                             </div>
                         ))}
                     </div>
-                </section>
-            )}
+                ) : (
+                    <p className="aero-empty-hint">Like some songs to get personalized mixes!</p>
+                )}
+            </section>
 
             {/* Recently Played */}
             {recentlyPlayed.length > 0 && (
