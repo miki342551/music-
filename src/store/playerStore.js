@@ -137,28 +137,47 @@ export const usePlayerStore = create(
                         }
 
                         audio.src = data.url
+                        audio.load() // Force start loading
 
                         // Wait for audio to be ready before playing
                         await new Promise((resolve, reject) => {
-                            const onCanPlay = () => {
+                            const cleanup = () => {
                                 audio.removeEventListener('canplay', onCanPlay)
+                                audio.removeEventListener('canplaythrough', onCanPlay)
+                                audio.removeEventListener('loadeddata', onLoadedData)
                                 audio.removeEventListener('error', onError)
+                            }
+
+                            const onCanPlay = () => {
+                                console.log('✅ Audio canplay event fired')
+                                cleanup()
                                 resolve()
                             }
-                            const onError = (e) => {
-                                audio.removeEventListener('canplay', onCanPlay)
-                                audio.removeEventListener('error', onError)
-                                reject(new Error('Audio failed to load'))
+
+                            const onLoadedData = () => {
+                                // Fallback - loadeddata fires earlier than canplay
+                                console.log('📦 Audio loadeddata event fired')
+                                cleanup()
+                                resolve()
                             }
+
+                            const onError = (e) => {
+                                console.error('❌ Audio error:', audio.error?.message || e)
+                                cleanup()
+                                reject(new Error(`Audio failed to load: ${audio.error?.message || 'Unknown error'}`))
+                            }
+
                             audio.addEventListener('canplay', onCanPlay)
+                            audio.addEventListener('canplaythrough', onCanPlay)
+                            audio.addEventListener('loadeddata', onLoadedData)
                             audio.addEventListener('error', onError)
 
-                            // Timeout for audio loading
+                            // Increased timeout for slower connections
                             setTimeout(() => {
-                                audio.removeEventListener('canplay', onCanPlay)
-                                audio.removeEventListener('error', onError)
+                                console.warn('⏰ Audio load timeout after 20s')
+                                cleanup()
                                 reject(new Error('Audio load timeout'))
-                            }, 10000)
+                            }, 20000)
                         })
 
                         await audio.play()
