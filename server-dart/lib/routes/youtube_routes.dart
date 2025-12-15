@@ -48,7 +48,7 @@ Router youtubeRoutes(YouTubeService youtube) {
     }
   });
 
-  // Stream URL endpoint - returns JSON with proxy URL
+  // Stream URL endpoint - returns JSON with direct YouTube URL
   router.get('/stream/<videoId>', (Request request, String videoId) async {
     final cached = AppCache.stream.get(videoId);
     if (cached != null) {
@@ -69,25 +69,17 @@ Router youtubeRoutes(YouTubeService youtube) {
         );
       }
 
-      // Store the direct URL for proxy endpoint
-      _streamUrlCache[videoId] = streamData['url'] as String;
-      
-      // Return proxy URL instead of direct YouTube URL
-      final host = request.requestedUri.host;
-      final port = request.requestedUri.port;
-      final scheme = request.requestedUri.scheme;
-      final proxyUrl = '$scheme://$host${port != 80 && port != 443 ? ':$port' : ''}/api/audio/$videoId';
-      
+      // Return direct YouTube URL - audio elements can load cross-origin audio
       final responseData = {
         ...streamData,
-        'url': proxyUrl, // Use our proxy instead of direct YouTube URL
-        'directUrl': streamData['url'], // Keep original for debugging
+        // Keep the direct URL as-is (no proxy)
       };
 
+      // Cache for 30 minutes (URLs expire after ~6 hours)
       AppCache.stream.set(videoId, responseData);
       
       print('✓ Stream found: ${streamData['title']}');
-      print('🔗 Proxy URL: $proxyUrl');
+      print('🔗 Direct URL: ${(streamData['url'] as String).substring(0, 80)}...');
       return Response.ok(
         json.encode(responseData),
         headers: {'Content-Type': 'application/json'},
