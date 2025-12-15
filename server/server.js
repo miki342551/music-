@@ -3,6 +3,16 @@ import cors from 'cors'
 import { spawn } from 'child_process'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { Innertube } from 'youtubei.js'
+
+// Innertube Singleton
+let youtube = null
+async function getYoutube() {
+    if (!youtube) {
+        youtube = await Innertube.create()
+    }
+    return youtube
+}
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -221,8 +231,36 @@ app.get('/api/search', async (req, res) => {
         }
     }
 
+    // 1. Try Innertube
     try {
-        console.log(`\n🔍 Searching YouTube for: ${q}`)
+        console.log(`\n🔍 Searching YouTube (Innertube) for: ${q}`)
+        const yt = await getYoutube()
+        const search = await yt.search(q)
+
+        // Filter for videos only
+        const videos = search.videos || []
+
+        const results = videos.map(video => ({
+            id: video.id,
+            videoId: video.id,
+            title: video.title.text || video.title,
+            artist: video.author.name || video.author,
+            thumbnail: video.thumbnails[0]?.url,
+            duration: video.duration.seconds || 0
+        }))
+
+        if (results.length > 0) {
+            cache.search.set(cacheKey, { data: results, timestamp: Date.now() })
+            console.log(`📋 Found ${results.length} results (Innertube)`)
+            return res.json({ results })
+        }
+    } catch (error) {
+        console.warn('⚠️ Innertube search failed, falling back to yt-dlp:', error.message)
+    }
+
+    // 2. Fallback to yt-dlp
+    try {
+        console.log(`🐢 Searching YouTube (yt-dlp) for: ${q}`)
 
         const args = [
             `ytsearch15:${q}`,
@@ -251,13 +289,7 @@ app.get('/api/search', async (req, res) => {
         }).filter(Boolean)
 
         cache.search.set(cacheKey, { data: results, timestamp: Date.now() })
-
-        if (cache.search.size > 100) {
-            const firstKey = cache.search.keys().next().value
-            cache.search.delete(firstKey)
-        }
-
-        console.log(`📋 Found ${results.length} results`)
+        console.log(`📋 Found ${results.length} results (yt-dlp)`)
         res.json({ results })
     } catch (error) {
         console.error('Search error:', error.message)
@@ -277,8 +309,35 @@ app.get('/api/stream/:videoId', async (req, res) => {
         }
     }
 
+    // 1. Try Innertube
     try {
-        console.log(`\n🎵 Getting stream for: ${videoId}`)
+        console.log(`\n🎵 Getting stream (Innertube) for: ${videoId}`)
+        const yt = await getYoutube()
+        const info = await yt.getBasicInfo(videoId)
+
+        const format = info.chooseFormat({ type: 'audio', quality: 'best' })
+        const url = format.decipher(yt.session.player)
+
+        if (url) {
+            const streamData = {
+                url: url,
+                title: info.basic_info.title,
+                artist: info.basic_info.author,
+                thumbnail: info.basic_info.thumbnail?.[0]?.url,
+                duration: info.basic_info.duration || 0
+            }
+
+            cache.stream.set(videoId, { data: streamData, timestamp: Date.now() })
+            console.log(`✓ Stream found (Innertube): ${streamData.title}`)
+            return res.json(streamData)
+        }
+    } catch (error) {
+        console.warn('⚠️ Innertube stream failed, falling back to yt-dlp:', error.message)
+    }
+
+    // 2. Fallback to yt-dlp
+    try {
+        console.log(`🐢 Getting stream (yt-dlp) for: ${videoId}`)
 
         const args = [
             '-f', 'bestaudio/best',
@@ -307,12 +366,7 @@ app.get('/api/stream/:videoId', async (req, res) => {
             timestamp: Date.now()
         })
 
-        if (cache.stream.size > 200) {
-            const firstKey = cache.stream.keys().next().value
-            cache.stream.delete(firstKey)
-        }
-
-        console.log(`✓ Stream found: ${streamData.title}`)
+        console.log(`✓ Stream found (yt-dlp): ${streamData.title}`)
         res.json(streamData)
     } catch (error) {
         console.error('Stream error:', error)
@@ -324,8 +378,33 @@ app.get('/api/stream/:videoId', async (req, res) => {
 app.get('/api/related/:videoId', async (req, res) => {
     const { videoId } = req.params
 
+    // 1. Try Innertube
     try {
-        console.log(`\n🔗 Getting related for: ${videoId}`)
+        console.log(`\n🔗 Getting related (Innertube) for: ${videoId}`)
+        const yt = await getYoutube()
+        const info = await yt.getBasicInfo(videoId)
+        const related = info.related_videos || []
+
+        const results = related.map(video => ({
+            id: video.id,
+            videoId: video.id,
+            title: video.title.text || video.title,
+            artist: video.author.name || video.author,
+            thumbnail: video.thumbnails?.[0]?.url,
+            duration: video.duration.seconds || 0
+        })).filter(v => v.id) // Filter out non-video items
+
+        if (results.length > 0) {
+            console.log(`📋 Found ${results.length} related tracks (Innertube)`)
+            return res.json({ results })
+        }
+    } catch (error) {
+        console.warn('⚠️ Innertube related failed, falling back to yt-dlp:', error.message)
+    }
+
+    // 2. Fallback to yt-dlp
+    try {
+        console.log(`🐢 Getting related (yt-dlp) for: ${videoId}`)
 
         // Get video info first to know what to search for
         const args = [
@@ -380,8 +459,41 @@ app.get('/api/trending', async (req, res) => {
         return res.json({ results: cache.trending.data })
     }
 
+    // 1. Try Innertube
     try {
-        console.log('\n📈 Getting trending music')
+        console.log('\n📈 Getting trending music (Innertube)')
+        const yt = await getYoutube()
+        const trending = await yt.getTrending()
+
+        // Trending returns a mix of sections, we need to find the music videos
+        // This part can be tricky as structure varies. 
+        // For simplicity, let's look for the first section with videos.
+        const videos = trending.videos || [] // This might need adjustment based on actual response structure
+
+        // If direct videos aren't available, we might need to traverse sections
+        // But for now, let's rely on fallback if this simple access fails or returns empty
+
+        if (videos.length > 0) {
+            const results = videos.map(video => ({
+                id: video.id,
+                videoId: video.id,
+                title: video.title.text || video.title,
+                artist: video.author.name || video.author,
+                thumbnail: video.thumbnails?.[0]?.url,
+                duration: video.duration.seconds || 0
+            }))
+
+            cache.trending = { data: results, timestamp: Date.now() }
+            console.log(`📋 Got ${results.length} trending tracks (Innertube)`)
+            return res.json({ results })
+        }
+    } catch (error) {
+        console.warn('⚠️ Innertube trending failed, falling back to yt-dlp:', error.message)
+    }
+
+    // 2. Fallback to yt-dlp
+    try {
+        console.log('🐢 Getting trending music (yt-dlp)')
 
         const args = [
             'ytsearch20:trending music 2024',
@@ -411,7 +523,7 @@ app.get('/api/trending', async (req, res) => {
 
         cache.trending = { data: results, timestamp: Date.now() }
 
-        console.log(`📋 Got ${results.length} trending tracks`)
+        console.log(`📋 Got ${results.length} trending tracks (yt-dlp)`)
         res.json({ results })
     } catch (error) {
         console.error('Trending error:', error.message)
@@ -427,6 +539,18 @@ app.get('/api/suggestions', async (req, res) => {
         return res.json({ suggestions: [] })
     }
 
+    // 1. Try Innertube
+    try {
+        const yt = await getYoutube()
+        const suggestions = await yt.getSearchSuggestions(q)
+        if (suggestions && suggestions.length > 0) {
+            return res.json({ suggestions })
+        }
+    } catch (error) {
+        console.warn('Innertube suggestions failed:', error.message)
+    }
+
+    // 2. Fallback to Google API
     try {
         const response = await fetch(`http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(q)}`)
         if (!response.ok) throw new Error('Suggestion API failed')
