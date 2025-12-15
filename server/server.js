@@ -86,6 +86,92 @@ const STREAM_TTL = 1000 * 60 * 60 // 1 hour (URLs expire)
 const SPOTIFY_TTL = 1000 * 60 * 60 // 1 hour
 const TRENDING_TTL = 1000 * 60 * 60 * 3 // 3 hours
 
+// ========================================
+// LAST.FM API (for Spotube-style recommendations)
+// ========================================
+// Last.fm API key - free tier, no OAuth needed
+const LASTFM_API_KEY = process.env.LASTFM_API_KEY || 'b25b959554ed76058ac220b7b2e0a026' // Public sample key
+
+// Get similar tracks from Last.fm (Spotube-style approach)
+async function getLastFmSimilarTracks(trackName, artistName, limit = 25) {
+    try {
+        console.log(`🎵 Last.fm: Getting similar tracks for "${trackName}" by "${artistName}"`)
+
+        const params = new URLSearchParams({
+            method: 'track.getsimilar',
+            track: trackName,
+            artist: artistName,
+            api_key: LASTFM_API_KEY,
+            format: 'json',
+            limit: limit.toString()
+        })
+
+        const response = await fetch(`https://ws.audioscrobbler.com/2.0/?${params}`)
+
+        if (!response.ok) {
+            throw new Error(`Last.fm API error: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        if (data.error) {
+            throw new Error(`Last.fm error: ${data.message}`)
+        }
+
+        const similarTracks = data.similartracks?.track || []
+
+        const results = similarTracks.map(track => ({
+            title: track.name,
+            artist: track.artist?.name || 'Unknown',
+            thumbnail: track.image?.[2]?.['#text'] || null, // Medium image
+            ytSearchQuery: `${track.name} ${track.artist?.name || ''}`,
+            matchScore: parseFloat(track.match) || 0,
+            source: 'lastfm'
+        }))
+
+        console.log(`📋 Last.fm: Found ${results.length} similar tracks`)
+        return results
+    } catch (error) {
+        console.error('Last.fm error:', error.message)
+        return []
+    }
+}
+
+// Get top tracks for a tag/genre from Last.fm
+async function getLastFmTopTracks(tag = 'pop', limit = 25) {
+    try {
+        console.log(`🎵 Last.fm: Getting top tracks for tag "${tag}"`)
+
+        const params = new URLSearchParams({
+            method: 'tag.gettoptracks',
+            tag: tag,
+            api_key: LASTFM_API_KEY,
+            format: 'json',
+            limit: limit.toString()
+        })
+
+        const response = await fetch(`https://ws.audioscrobbler.com/2.0/?${params}`)
+
+        if (!response.ok) {
+            throw new Error(`Last.fm API error: ${response.status}`)
+        }
+
+        const data = await response.json()
+        const tracks = data.tracks?.track || []
+
+        return tracks.map(track => ({
+            title: track.name,
+            artist: track.artist?.name || 'Unknown',
+            thumbnail: track.image?.[2]?.['#text'] || null,
+            ytSearchQuery: `${track.name} ${track.artist?.name || ''}`,
+            source: 'lastfm'
+        }))
+    } catch (error) {
+        console.error('Last.fm top tracks error:', error.message)
+        return []
+    }
+}
+
 // Helper to run yt-dlp command
 function runYtDlp(args) {
     return new Promise((resolve, reject) => {
@@ -237,65 +323,92 @@ app.get('/api/spotify/match', async (req, res) => {
     }
 })
 
-// Get personalized "Made For You" recommendations
+// Get personalized "Made For You" recommendations (Spotube-style: Last.fm + Spotify hybrid)
 app.get('/api/spotify/made-for-you', async (req, res) => {
-    const { seeds, type = 'default' } = req.query
-
-    if (!seeds) {
-        return res.status(400).json({ error: 'Seed tracks required' })
-    }
+    const { seeds, type = 'default', track, artist } = req.query
 
     try {
-        const token = await getSpotifyToken()
         console.log(`\n🎯 Getting Made For You: ${type}`)
+        let results = []
 
-        // Build recommendations URL with audio features based on type
-        // Don't URL encode seeds - they come decoded from query string and Spotify expects raw track IDs
-        const seedList = seeds.split(',').slice(0, 5).join(',') // Max 5 seeds per Spotify API
-        let params = `seed_tracks=${seedList}&limit=25`
+        // METHOD 1: If track/artist provided, use Last.fm similar tracks (Spotube approach)
+        if (track && artist) {
+            console.log('📡 Using Last.fm collaborative filtering (Spotube-style)')
+            results = await getLastFmSimilarTracks(track, artist, 25)
 
-        // Customize based on mix type
-        switch (type) {
-            case 'chill':
-                params += '&target_energy=0.4&target_valence=0.5&target_tempo=100'
-                break
-            case 'energetic':
-                params += '&target_energy=0.8&target_danceability=0.7&target_tempo=130'
-                break
-            case 'discovery':
-                params += '&min_popularity=20&max_popularity=60' // Less mainstream
-                break
-            case 'focus':
-                params += '&target_instrumentalness=0.5&target_energy=0.5&target_tempo=110'
-                break
-            default:
-                // Default mix - balanced
-                break
+            if (results.length > 0) {
+                console.log(`✓ Last.fm: Found ${results.length} similar tracks`)
+                return res.json({ results, source: 'lastfm' })
+            }
         }
 
-        const response = await fetch(
-            `https://api.spotify.com/v1/recommendations?${params}`,
-            { headers: { 'Authorization': `Bearer ${token}` } }
-        )
+        // METHOD 2: Use Last.fm top tracks by genre/tag based on type
+        if (results.length === 0) {
+            const tagMap = {
+                'chill': 'chill',
+                'energetic': 'dance',
+                'discovery': 'indie',
+                'focus': 'ambient',
+                'default': 'pop'
+            }
+            const tag = tagMap[type] || 'pop'
+            console.log(`📡 Trying Last.fm top tracks for tag: ${tag}`)
+            results = await getLastFmTopTracks(tag, 25)
 
-        if (!response.ok) {
-            throw new Error(`Spotify API error: ${response.status}`)
+            if (results.length > 0) {
+                console.log(`✓ Last.fm: Found ${results.length} top ${tag} tracks`)
+                return res.json({ results, source: 'lastfm' })
+            }
         }
 
-        const data = await response.json()
+        // METHOD 3: Fallback to Spotify recommendations if Last.fm failed
+        if (seeds) {
+            console.log('📡 Falling back to Spotify recommendations')
+            const token = await getSpotifyToken()
 
-        const results = data.tracks.map(track => ({
-            spotifyId: track.id,
-            title: track.name,
-            artist: track.artists.map(a => a.name).join(', '),
-            album: track.album.name,
-            thumbnail: track.album.images[0]?.url || track.album.images[1]?.url,
-            duration: Math.floor(track.duration_ms / 1000),
-            ytSearchQuery: `${track.name} ${track.artists[0]?.name || ''}`
-        }))
+            const seedList = seeds.split(',').slice(0, 5).join(',')
+            let params = `seed_tracks=${seedList}&limit=25`
 
-        console.log(`📋 Made For You: ${results.length} tracks`)
-        res.json({ results })
+            // Customize based on mix type
+            switch (type) {
+                case 'chill':
+                    params += '&target_energy=0.4&target_valence=0.5&target_tempo=100'
+                    break
+                case 'energetic':
+                    params += '&target_energy=0.8&target_danceability=0.7&target_tempo=130'
+                    break
+                case 'discovery':
+                    params += '&min_popularity=20&max_popularity=60'
+                    break
+                case 'focus':
+                    params += '&target_instrumentalness=0.5&target_energy=0.5&target_tempo=110'
+                    break
+            }
+
+            const response = await fetch(
+                `https://api.spotify.com/v1/recommendations?${params}`,
+                { headers: { 'Authorization': `Bearer ${token}` } }
+            )
+
+            if (response.ok) {
+                const data = await response.json()
+                results = data.tracks.map(track => ({
+                    spotifyId: track.id,
+                    title: track.name,
+                    artist: track.artists.map(a => a.name).join(', '),
+                    album: track.album.name,
+                    thumbnail: track.album.images[0]?.url || track.album.images[1]?.url,
+                    duration: Math.floor(track.duration_ms / 1000),
+                    ytSearchQuery: `${track.name} ${track.artists[0]?.name || ''}`
+                }))
+                console.log(`✓ Spotify: Found ${results.length} recommendations`)
+                return res.json({ results, source: 'spotify' })
+            }
+        }
+
+        // If all else fails, return empty with error
+        console.log('⚠️ No recommendations available from any source')
+        res.json({ results: [], source: 'none' })
     } catch (error) {
         console.error('Made For You error:', error.message)
         res.status(500).json({ error: 'Failed to get recommendations', results: [] })
