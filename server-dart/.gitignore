@@ -1,0 +1,15 @@
+# Dart build outputs
+.dart_tool/
+build/
+
+# Pub packages
+.packages
+.pub/
+pubspec.lock
+
+# IDE
+.idea/
+*.iml
+
+# Logs
+*.log
