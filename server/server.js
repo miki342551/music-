@@ -250,7 +250,9 @@ app.get('/api/spotify/made-for-you', async (req, res) => {
         console.log(`\n🎯 Getting Made For You: ${type}`)
 
         // Build recommendations URL with audio features based on type
-        let params = `seed_tracks=${encodeURIComponent(seeds)}&limit=25`
+        // Don't URL encode seeds - they come decoded from query string and Spotify expects raw track IDs
+        const seedList = seeds.split(',').slice(0, 5).join(',') // Max 5 seeds per Spotify API
+        let params = `seed_tracks=${seedList}&limit=25`
 
         // Customize based on mix type
         switch (type) {
