@@ -1,36 +1,37 @@
-# Use Node.js LTS
-FROM node:20-slim
+# ========================================
+# GE'EZ Music Backend - Dart Server
+# Uses youtube_explode_dart for streaming
+# ========================================
 
-# Install yt-dlp and ffmpeg
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    ffmpeg \
-    curl \
-    && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
-    && chmod a+rx /usr/local/bin/yt-dlp \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Build stage
+FROM dart:stable AS build
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files from server folder
-COPY server/package*.json ./
+# Copy pubspec first for better caching
+COPY server-dart/pubspec.* ./
+RUN dart pub get
 
-# Install dependencies
-RUN npm install --omit=dev
+# Copy source code
+COPY server-dart/bin ./bin
+COPY server-dart/lib ./lib
 
-# Copy server code from server folder
-COPY server/ .
+# Compile to native executable
+RUN dart compile exe bin/server.dart -o bin/server
+
+# Runtime stage - minimal image
+FROM debian:bookworm-slim
+
+# Install ca-certificates for HTTPS
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+
+# Copy the executable
+COPY --from=build /app/bin/server /app/server
 
 # Expose port
 EXPOSE 3001
 
-# Set environment variable for yt-dlp path
-ENV YT_DLP_PATH=/usr/local/bin/yt-dlp
-ENV NODE_ENV=production
 ENV PORT=3001
 
-# Start server
-CMD ["node", "server.js"]
+# Run the server
+CMD ["/app/server"]
