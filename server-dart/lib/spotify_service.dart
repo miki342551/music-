@@ -138,9 +138,12 @@ class SpotifyService {
     if (token == null) return [];
 
     try {
-      print('🎯 Getting Made For You: $type');
+      print('🎯 Getting Made For You: $type with seeds: $seeds');
       
-      String params = 'seed_tracks=${Uri.encodeComponent(seeds)}&limit=25';
+      // Don't URI encode the seeds - Spotify expects comma-separated IDs directly
+      // Also limit to 5 seeds max as per Spotify API docs
+      final seedList = seeds.split(',').take(5).join(',');
+      String params = 'seed_tracks=$seedList&limit=25';
       
       switch (type) {
         case 'chill':
@@ -157,17 +160,29 @@ class SpotifyService {
           break;
       }
 
+      final url = 'https://api.spotify.com/v1/recommendations?$params';
+      print('📡 Calling: $url');
+      
       final response = await http.get(
-        Uri.parse('https://api.spotify.com/v1/recommendations?$params'),
+        Uri.parse(url),
         headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode != 200) {
+        print('❌ Spotify response: ${response.statusCode} - ${response.body}');
         throw Exception('Spotify API error: ${response.statusCode}');
       }
 
       final data = json.decode(response.body);
-      return _parseTracksResponse(data['tracks'] as List);
+      final tracks = data['tracks'] as List?;
+      if (tracks == null || tracks.isEmpty) {
+        print('⚠️ No tracks returned from recommendations');
+        return [];
+      }
+      
+      final results = _parseTracksResponse(tracks);
+      print('✓ Got ${results.length} Made For You tracks');
+      return results;
     } catch (e) {
       print('Made For You error: $e');
       return [];
