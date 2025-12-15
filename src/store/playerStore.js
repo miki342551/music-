@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { getRelatedTracks } from '../services/musicApi'
+import { getRelatedTracks, getLyrics } from '../services/musicApi'
 
 // Audio element singleton
 let audioElement = null
@@ -18,6 +18,7 @@ export const usePlayerStore = create(
         (set, get) => ({
             // Current track
             currentTrack: null,
+            lyrics: null,
 
             // Queue
             queue: [],
@@ -69,7 +70,12 @@ export const usePlayerStore = create(
             // Handles both Spotify tracks (need YouTube matching) and YouTube tracks (have videoId)
             playTrack: async (track, addToQueue = false) => {
                 const audio = getAudio()
-                set({ isLoading: true, error: null, currentTrack: track })
+                set({ isLoading: true, error: null, currentTrack: track, lyrics: null })
+
+                // Fetch lyrics in background
+                getLyrics(track.title, track.artist, track.album, track.duration)
+                    .then(lyrics => set({ lyrics }))
+                    .catch(console.error)
 
                 const MAX_RETRIES = 3
                 let lastError = null

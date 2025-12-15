@@ -186,6 +186,28 @@ export async function getSearchSuggestions(query) {
 }
 
 // ========================================
+// LYRICS
+// ========================================
+
+// Get synced lyrics
+export async function getLyrics(track, artist, album, duration) {
+    try {
+        const params = new URLSearchParams({ track, artist })
+        if (album) params.append('album', album)
+        if (duration) params.append('duration', duration)
+
+        const response = await fetch(`${API_BASE}/lyrics?${params}`)
+        if (!response.ok) return null
+
+        const data = await response.json()
+        return data
+    } catch (error) {
+        console.error('Lyrics error:', error)
+        return null
+    }
+}
+
+// ========================================
 // TRACK DETAILS
 // ========================================
 

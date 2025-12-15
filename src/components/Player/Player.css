@@ -1,11 +1,12 @@
-/* ===== NEUMORPHIC PLAYER - ENHANCED BUTTONS ===== */
+/* ===== NEUMORPHIC PLAYER - OLEDBLACK & GOLD ===== */
 .neo-player {
     position: fixed;
     inset: 0;
     z-index: 2000;
     display: flex;
     flex-direction: column;
-    background: #0a0a0a;
+    background: #000000;
+    /* Pure OLED Black */
     padding: 0 24px;
     padding-top: max(16px, env(safe-area-inset-top));
     padding-bottom: max(16px, env(safe-area-inset-bottom));
@@ -27,6 +28,8 @@
     font-size: 64px;
     margin-bottom: 24px;
     opacity: 0.5;
+    color: #D4AF37;
+    /* Gold */
 }
 
 .neo-player-empty h2 {
@@ -38,7 +41,7 @@
 
 .neo-player-empty p {
     font-size: 14px;
-    color: #666;
+    color: #888;
 }
 
 /* Top Bar */
@@ -53,8 +56,8 @@
 .neo-icon-btn {
     width: 48px;
     height: 48px;
-    background: #1c1c1c;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 14px;
     display: flex;
     align-items: center;
@@ -62,22 +65,24 @@
     color: #fff;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    box-shadow:
-        0 4px 12px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    box-shadow: none;
+    /* Minimalist */
 }
 
 .neo-icon-btn:active {
-    transform: scale(0.9);
-    background: #252525;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transform: scale(0.95);
+    background: #222;
+    border-color: #D4AF37;
+    /* Gold border on press */
+    color: #D4AF37;
 }
 
 .neo-now-playing {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    color: #aaa;
-    letter-spacing: 0.5px;
+    color: #D4AF37;
+    /* Gold */
+    letter-spacing: 1px;
     text-transform: uppercase;
 }
 
@@ -96,8 +101,10 @@
     object-fit: cover;
     border-radius: 20px;
     box-shadow:
-        0 25px 60px rgba(0, 0, 0, 0.6),
-        0 15px 30px rgba(0, 0, 0, 0.4);
+        0 20px 50px rgba(0, 0, 0, 0.8),
+        /* Deep shadow */
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+    /* Subtle border */
 }
 
 /* Track Info Card */
@@ -105,20 +112,17 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    background: #161616;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-radius: 16px;
-    padding: 14px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    background: transparent;
+    /* Minimalist - remove card bg */
+    border: none;
+    padding: 0 14px;
+    margin-bottom: 24px;
+    box-shadow: none;
 }
 
 .neo-track-thumb {
-    width: 52px;
-    height: 52px;
-    border-radius: 10px;
-    object-fit: cover;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: none;
+    /* Hide thumb in main player for cleaner look */
 }
 
 .neo-track-info {
@@ -126,54 +130,48 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
+    align-items: center;
+    /* Center text */
+    text-align: center;
 }
 
 .neo-track-artist {
-    font-size: 12px;
-    color: #888;
+    font-size: 14px;
+    color: #D4AF37;
+    /* Gold */
+    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .neo-track-title {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 700;
     color: #fff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    letter-spacing: -0.5px;
 }
 
 .neo-follow-btn {
-    background: linear-gradient(135deg, #2a2a2a 0%, #222 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    padding: 10px 18px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #fff;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.neo-follow-btn:active {
-    transform: scale(0.95);
-    background: #333;
+    display: none;
+    /* Hide follow button for minimalism */
 }
 
 /* Progress Bar */
 .neo-progress-section {
-    margin-bottom: 28px;
+    margin-bottom: 32px;
+    padding: 0 12px;
 }
 
 .neo-progress-bar {
-    height: 5px;
-    background: #2a2a2a;
-    border-radius: 3px;
+    height: 2px;
+    /* Ultra thin */
+    background: #222;
+    border-radius: 1px;
     cursor: pointer;
     position: relative;
     overflow: visible;
@@ -181,32 +179,34 @@
 
 .neo-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #fff 0%, #e0e0e0 100%);
-    border-radius: 3px;
-    transition: width 0.1s linear;
+    background: #D4AF37;
+    /* Gold */
+    border-radius: 1px;
     position: relative;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    /* Gold glow */
 }
 
 /* Progress Thumb */
 .neo-progress-fill::after {
     content: '';
     position: absolute;
-    right: -6px;
+    right: -4px;
     top: 50%;
     transform: translateY(-50%);
-    width: 12px;
-    height: 12px;
+    width: 8px;
+    height: 8px;
     background: #fff;
     border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
 
 .neo-time {
     display: flex;
     justify-content: space-between;
-    margin-top: 12px;
-    font-size: 12px;
-    color: #777;
+    margin-top: 8px;
+    font-size: 11px;
+    color: #666;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
 }
@@ -222,138 +222,125 @@
 
 /* Side Buttons - Enhanced */
 .neo-side-btn {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(145deg, #1e1e1e 0%, #161616 100%);
+    width: 56px;
+    height: 56px;
+    background: #0a0a0a;
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #999;
+    color: #666;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    box-shadow:
-        6px 6px 16px rgba(0, 0, 0, 0.5),
-        -3px -3px 10px rgba(50, 50, 50, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition: all 0.2s ease;
 }
 
 .neo-side-btn:active {
-    transform: scale(0.88);
+    transform: scale(0.9);
     color: #fff;
-    box-shadow:
-        3px 3px 8px rgba(0, 0, 0, 0.5),
-        -1px -1px 4px rgba(50, 50, 50, 0.1),
-        inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    background: #111;
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .neo-side-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
 }
 
 /* Circular Control Pad - Enhanced */
 .neo-control-pad {
     position: relative;
-    width: 210px;
-    height: 210px;
-    background: linear-gradient(145deg, #1a1a1a 0%, #121212 100%);
+    width: 200px;
+    height: 200px;
+    background: #050505;
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.03);
     box-shadow:
-        12px 12px 30px rgba(0, 0, 0, 0.6),
-        -6px -6px 20px rgba(60, 60, 60, 0.1),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+        0 0 40px rgba(0, 0, 0, 0.8),
+        inset 0 0 20px rgba(0, 0, 0, 0.8);
 }
 
 /* Pad Direction Buttons - Enhanced */
 .neo-pad-btn {
     position: absolute;
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(145deg, #222 0%, #1a1a1a 100%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    width: 48px;
+    height: 48px;
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #aaa;
+    color: #888;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    box-shadow:
-        4px 4px 10px rgba(0, 0, 0, 0.4),
-        -2px -2px 6px rgba(60, 60, 60, 0.08);
+    transition: all 0.2s ease;
 }
 
 .neo-pad-btn:active {
-    color: #fff;
-    transform: scale(0.88);
-    background: linear-gradient(145deg, #2a2a2a 0%, #222 100%);
-    box-shadow:
-        2px 2px 5px rgba(0, 0, 0, 0.4),
-        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    color: #D4AF37;
+    /* Gold */
+    transform: scale(0.9);
+    background: #1a1a1a;
+    border-color: rgba(212, 175, 55, 0.2);
 }
 
 .neo-pad-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
 }
 
 /* Heart Button - Special */
 .neo-pad-btn.liked {
-    color: #ff4757;
-    background: linear-gradient(145deg, #2a1a1a 0%, #1a1212 100%);
-    border-color: rgba(255, 71, 87, 0.15);
-    box-shadow:
-        4px 4px 10px rgba(0, 0, 0, 0.4),
-        -2px -2px 6px rgba(60, 60, 60, 0.08),
-        0 0 20px rgba(255, 71, 87, 0.15);
+    color: #D4AF37;
+    /* Gold */
+    background: rgba(212, 175, 55, 0.1);
+    border-color: rgba(212, 175, 55, 0.3);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
 }
 
 .neo-pad-btn.liked svg {
-    fill: #ff4757;
+    fill: #D4AF37;
 }
 
 /* Position buttons around the circle */
 .neo-pad-top {
-    top: 12px;
+    top: 10px;
     left: 50%;
     transform: translateX(-50%);
 }
 
 .neo-pad-top:active {
-    transform: translateX(-50%) scale(0.88);
+    transform: translateX(-50%) scale(0.9);
 }
 
 .neo-pad-left {
-    left: 12px;
+    left: 10px;
     top: 50%;
     transform: translateY(-50%);
 }
 
 .neo-pad-left:active {
-    transform: translateY(-50%) scale(0.88);
+    transform: translateY(-50%) scale(0.9);
 }
 
 .neo-pad-right {
-    right: 12px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
 }
 
 .neo-pad-right:active {
-    transform: translateY(-50%) scale(0.88);
+    transform: translateY(-50%) scale(0.9);
 }
 
 .neo-pad-bottom {
-    bottom: 12px;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
 }
 
 .neo-pad-bottom:active {
-    transform: translateX(-50%) scale(0.88);
+    transform: translateX(-50%) scale(0.9);
 }
 
 /* Center Play Button - Main Focus */
@@ -362,43 +349,39 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    width: 72px;
+    height: 72px;
+    background: #D4AF37;
+    /* Gold */
+    border: none;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
+    color: #000;
+    /* Black icon on gold */
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    box-shadow:
-        6px 6px 16px rgba(0, 0, 0, 0.5),
-        -3px -3px 10px rgba(70, 70, 70, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
 }
 
 .neo-play-btn:active {
     transform: translate(-50%, -50%) scale(0.9);
-    box-shadow:
-        3px 3px 8px rgba(0, 0, 0, 0.5),
-        -1px -1px 4px rgba(70, 70, 70, 0.1),
-        inset 0 3px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
 }
 
 .neo-play-btn svg {
-    width: 32px;
-    height: 32px;
-    margin-left: 4px;
-    /* Optical centering for play icon */
+    width: 28px;
+    height: 28px;
+    margin-left: 2px;
+    fill: #000;
 }
 
 .neo-spinner {
-    width: 28px;
-    height: 28px;
-    border: 3px solid rgba(255, 255, 255, 0.15);
-    border-top-color: #fff;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #000;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -413,69 +396,45 @@
 .neo-secondary-controls {
     display: flex;
     justify-content: space-between;
-    padding: 0 24px;
+    padding: 0 32px;
     margin-bottom: 16px;
 }
 
 .neo-secondary-btn {
-    width: 52px;
-    height: 52px;
-    background: linear-gradient(145deg, #1a1a1a 0%, #141414 100%);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    width: 48px;
+    height: 48px;
+    background: transparent;
+    border: none;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #666;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    box-shadow:
-        4px 4px 12px rgba(0, 0, 0, 0.4),
-        -2px -2px 6px rgba(50, 50, 50, 0.08);
+    transition: all 0.2s ease;
 }
 
 .neo-secondary-btn:active {
-    transform: scale(0.88);
-    color: #aaa;
-    box-shadow:
-        2px 2px 6px rgba(0, 0, 0, 0.4),
-        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    transform: scale(0.9);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .neo-secondary-btn.active {
-    color: #1DB954;
-    background: linear-gradient(145deg, #1a2a1a 0%, #142014 100%);
-    border-color: rgba(29, 185, 84, 0.15);
-    box-shadow:
-        4px 4px 12px rgba(0, 0, 0, 0.4),
-        -2px -2px 6px rgba(50, 50, 50, 0.08),
-        0 0 20px rgba(29, 185, 84, 0.1);
+    color: #D4AF37;
+    /* Gold */
+    background: rgba(212, 175, 55, 0.05);
 }
 
 .neo-secondary-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
 }
 
 /* Home Indicator */
 .neo-home-indicator {
     width: 134px;
     height: 5px;
-    background: #3a3a3a;
-    border-radius: 3px;
-    margin: auto auto 8px;
-}
-
-/* Responsive */
-@media (min-width: 400px) {
-    .neo-album-art {
-        max-width: 320px;
-    }
-
-    .neo-control-pad {
-        width: 230px;
-        height: 230px;
-    }
 
     .neo-play-btn {
         width: 88px;

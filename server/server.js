@@ -419,17 +419,68 @@ app.get('/api/trending', async (req, res) => {
     }
 })
 
-// Suggestions
+// Suggestions (YouTube Autocomplete)
 app.get('/api/suggestions', async (req, res) => {
     const { q } = req.query
 
-    if (!q || q.length < 2) {
+    if (!q || q.length < 1) {
         return res.json({ suggestions: [] })
     }
 
-    // Use a simple local approach - return empty for now
-    // In production, you could use YouTube's suggestion API
-    res.json({ suggestions: [] })
+    try {
+        const response = await fetch(`http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(q)}`)
+        if (!response.ok) throw new Error('Suggestion API failed')
+
+        const data = await response.json()
+        const suggestions = data[1] || []
+
+        res.json({ suggestions })
+    } catch (error) {
+        console.error('Suggestion error:', error.message)
+        res.json({ suggestions: [] })
+    }
+})
+
+// Synced Lyrics (LRCLIB)
+app.get('/api/lyrics', async (req, res) => {
+    const { track, artist, album, duration } = req.query
+
+    if (!track || !artist) {
+        return res.status(400).json({ error: 'Track and artist are required' })
+    }
+
+    try {
+        console.log(`\n🎤 Getting lyrics for: ${track} - ${artist}`)
+
+        const params = new URLSearchParams({
+            artist_name: artist,
+            track_name: track,
+            album_name: album || '',
+            duration: duration || ''
+        })
+
+        const response = await fetch(`https://lrclib.net/api/get?${params}`)
+
+        if (response.status === 404) {
+            console.log('❌ Lyrics not found')
+            return res.status(404).json({ error: 'Lyrics not found' })
+        }
+
+        if (!response.ok) {
+            throw new Error(`LRCLIB error: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        res.json({
+            syncedLyrics: data.syncedLyrics,
+            plainLyrics: data.plainLyrics,
+            instrumental: data.instrumental
+        })
+    } catch (error) {
+        console.error('Lyrics error:', error.message)
+        res.status(500).json({ error: 'Failed to get lyrics' })
+    }
 })
 
 // ========================================

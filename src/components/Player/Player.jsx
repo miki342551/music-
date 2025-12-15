@@ -88,7 +88,10 @@ function Player({ onClose }) {
         playNext,
         playPrevious,
         seek,
-        cycleRepeat
+        cycleRepeat,
+        lyrics,
+        showLyrics,
+        toggleLyrics
     } = usePlayerStore()
 
     const { isLiked, toggleLike } = useLibraryStore()
@@ -115,6 +118,24 @@ function Player({ onClose }) {
         hapticMedium()
         togglePlay()
     }
+
+    // Auto-scroll lyrics
+    const lyricsRef = useRef(null)
+    useEffect(() => {
+        if (showLyrics && lyrics && lyrics.syncedLyrics) {
+            const activeLineIndex = lyrics.syncedLyrics.findIndex((line, index) => {
+                const nextLine = lyrics.syncedLyrics[index + 1]
+                return currentTime >= line.seconds && (!nextLine || currentTime < nextLine.seconds)
+            })
+
+            if (activeLineIndex !== -1 && lyricsRef.current) {
+                const activeEl = lyricsRef.current.children[activeLineIndex]
+                if (activeEl) {
+                    activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }
+            }
+        }
+    }, [currentTime, showLyrics, lyrics])
 
     const progress = duration ? (currentTime / duration) * 100 : 0
     const liked = currentTrack ? isLiked(currentTrack) : false
@@ -166,7 +187,36 @@ function Player({ onClose }) {
                     <span className="neo-track-title">{currentTrack.title}</span>
                 </div>
                 <button className="neo-follow-btn">Follow</button>
+                <button className="neo-follow-btn">Follow</button>
             </div>
+
+            {/* Lyrics Overlay */}
+            {showLyrics && (
+                <div className="neo-lyrics-overlay" onClick={toggleLyrics}>
+                    <div className="neo-lyrics-content" ref={lyricsRef} onClick={e => e.stopPropagation()}>
+                        {lyrics ? (
+                            lyrics.syncedLyrics ? (
+                                lyrics.syncedLyrics.map((line, index) => {
+                                    const isActive = currentTime >= line.seconds &&
+                                        (!lyrics.syncedLyrics[index + 1] || currentTime < lyrics.syncedLyrics[index + 1].seconds)
+                                    return (
+                                        <p key={index} className={`neo-lyric-line ${isActive ? 'active' : ''}`}>
+                                            {line.content}
+                                        </p>
+                                    )
+                                })
+                            ) : (
+                                <p className="neo-lyrics-plain">{lyrics.plainLyrics || 'No lyrics available'}</p>
+                            )
+                        ) : (
+                            <div className="neo-lyrics-loading">
+                                <div className="neo-spinner" />
+                                <p>Loading lyrics...</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Progress Bar */}
             <div className="neo-progress-section">
@@ -255,7 +305,10 @@ function Player({ onClose }) {
                 >
                     <Icons.Repeat />
                 </button>
-                <button className="neo-secondary-btn">
+                <button
+                    className={`neo-secondary-btn ${showLyrics ? 'active' : ''}`}
+                    onClick={() => { hapticLight(); toggleLyrics() }}
+                >
                     <Icons.MusicNote />
                 </button>
             </div>
