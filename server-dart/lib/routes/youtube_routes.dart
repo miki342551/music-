@@ -1,17 +1,14 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
-import 'package:http/http.dart' as http;
 import '../youtube_service.dart';
+import '../piped_service.dart';
 import '../cache.dart';
 
-// Store stream URLs for proxy access
-final Map<String, String> _streamUrlCache = {};
-
-/// YouTube API routes
+/// YouTube API routes - Uses Piped (NewPipe Extractor) as primary source
 Router youtubeRoutes(YouTubeService youtube) {
   final router = Router();
+  final piped = PipedService();
 
   // Search endpoint
   router.get('/search', (Request request) async {
@@ -33,6 +30,7 @@ Router youtubeRoutes(YouTubeService youtube) {
 
     try {
       print('\n🔍 Searching for: $query');
+      // Use youtube_explode for search (faster)
       final results = await youtube.search(query);
       AppCache.search.set(cacheKey, results);
       print('📋 Found ${results.length} results');
@@ -48,7 +46,7 @@ Router youtubeRoutes(YouTubeService youtube) {
     }
   });
 
-  // Stream URL endpoint - returns JSON with direct YouTube URL
+  // Stream URL endpoint - Uses Piped (NewPipe) as primary, youtube_explode as fallback
   router.get('/stream/<videoId>', (Request request, String videoId) async {
     final cached = AppCache.stream.get(videoId);
     if (cached != null) {
@@ -61,27 +59,32 @@ Router youtubeRoutes(YouTubeService youtube) {
 
     try {
       print('\n🎵 Getting stream for: $videoId');
-      final streamData = await youtube.getStreamUrl(videoId);
+      
+      // Try Piped API first (NewPipe Extractor)
+      print('📡 Trying Piped API (NewPipe Extractor)...');
+      var streamData = await piped.getStreamUrl(videoId);
+      
+      // Fallback to youtube_explode if Piped fails
+      if (streamData == null) {
+        print('⚠️ Piped failed, falling back to youtube_explode...');
+        streamData = await youtube.getStreamUrl(videoId);
+        if (streamData != null) {
+          streamData['source'] = 'youtube_explode';
+        }
+      }
       
       if (streamData == null) {
         return Response.internalServerError(
-          body: json.encode({'error': 'Failed to get stream'}),
+          body: json.encode({'error': 'Failed to get stream from all sources'}),
         );
       }
 
-      // Return direct YouTube URL - audio elements can load cross-origin audio
-      final responseData = {
-        ...streamData,
-        // Keep the direct URL as-is (no proxy)
-      };
-
-      // Cache for 30 minutes (URLs expire after ~6 hours)
-      AppCache.stream.set(videoId, responseData);
+      // Cache result (30 min TTL - URLs expire after ~6 hours)
+      AppCache.stream.set(videoId, streamData);
       
-      print('✓ Stream found: ${streamData['title']}');
-      print('🔗 Direct URL: ${(streamData['url'] as String).substring(0, 80)}...');
+      print('✓ Stream found via ${streamData['source'] ?? 'unknown'}: ${streamData['title']}');
       return Response.ok(
-        json.encode(responseData),
+        json.encode(streamData),
         headers: {'Content-Type': 'application/json'},
       );
     } catch (e) {
@@ -89,38 +92,6 @@ Router youtubeRoutes(YouTubeService youtube) {
       return Response.internalServerError(
         body: json.encode({'error': 'Failed to get stream'}),
       );
-    }
-  });
-
-  // Audio proxy endpoint - streams audio using youtube_explode's authenticated client
-  router.get('/audio/<videoId>', (Request request, String videoId) async {
-    print('🎧 Audio proxy request for: $videoId');
-    
-    try {
-      // Use youtube_explode's authenticated stream client to get audio bytes
-      final audioBytes = await youtube.getAudioBytes(videoId);
-      
-      if (audioBytes == null || audioBytes.isEmpty) {
-        print('❌ Failed to get audio bytes for: $videoId');
-        return Response.internalServerError(body: 'Failed to get audio');
-      }
-
-      print('✅ Serving ${audioBytes.length} bytes of audio');
-      
-      return Response.ok(
-        audioBytes,
-        headers: {
-          'Content-Type': 'audio/mp4',
-          'Content-Length': audioBytes.length.toString(),
-          'Accept-Ranges': 'bytes',
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'public, max-age=3600',
-        },
-      );
-    } catch (e, stack) {
-      print('❌ Audio proxy error: $e');
-      print('Stack: $stack');
-      return Response.internalServerError(body: 'Audio proxy failed: $e');
     }
   });
 
