@@ -119,6 +119,80 @@ class YouTubeService {
     }
   }
 
+  /// Get audio stream bytes for a video - uses youtube_explode's authenticated client
+  Future<List<int>?> getAudioBytes(String videoId) async {
+    try {
+      print('🎵 Streaming audio bytes for: $videoId');
+      
+      final manifest = await _yt.videos.streamsClient.getManifest(videoId);
+      final audioStreams = manifest.audioOnly.toList();
+      
+      if (audioStreams.isEmpty) {
+        throw Exception('No audio streams found');
+      }
+      
+      // Sort: prefer MP4/AAC, then by bitrate
+      audioStreams.sort((a, b) {
+        final aIsMp4 = a.container.name.toLowerCase() == 'mp4' || 
+                       a.audioCodec.toLowerCase().contains('mp4a');
+        final bIsMp4 = b.container.name.toLowerCase() == 'mp4' || 
+                       b.audioCodec.toLowerCase().contains('mp4a');
+        
+        if (aIsMp4 && !bIsMp4) return -1;
+        if (!aIsMp4 && bIsMp4) return 1;
+        return b.bitrate.bitsPerSecond.compareTo(a.bitrate.bitsPerSecond);
+      });
+      
+      final bestAudio = audioStreams.first;
+      print('✅ Streaming: ${bestAudio.container.name} | ${bestAudio.audioCodec} | ${bestAudio.bitrate.kiloBitsPerSecond.toStringAsFixed(0)}kbps');
+      
+      // Use youtube_explode's stream client which handles authentication
+      final stream = _yt.videos.streamsClient.get(bestAudio);
+      final bytes = <int>[];
+      
+      await for (final chunk in stream) {
+        bytes.addAll(chunk);
+      }
+      
+      print('✅ Downloaded ${bytes.length} bytes');
+      return bytes;
+    } catch (e, stack) {
+      print('❌ Audio stream error: $e');
+      print('Stack: $stack');
+      return null;
+    }
+  }
+
+  /// Get audio stream info for a video
+  Future<AudioOnlyStreamInfo?> getBestAudioStream(String videoId) async {
+    try {
+      final manifest = await _yt.videos.streamsClient.getManifest(videoId);
+      final audioStreams = manifest.audioOnly.toList();
+      
+      if (audioStreams.isEmpty) return null;
+      
+      // Sort: prefer MP4/AAC, then by bitrate
+      audioStreams.sort((a, b) {
+        final aIsMp4 = a.container.name.toLowerCase() == 'mp4' || 
+                       a.audioCodec.toLowerCase().contains('mp4a');
+        final bIsMp4 = b.container.name.toLowerCase() == 'mp4' || 
+                       b.audioCodec.toLowerCase().contains('mp4a');
+        
+        if (aIsMp4 && !bIsMp4) return -1;
+        if (!aIsMp4 && bIsMp4) return 1;
+        return b.bitrate.bitsPerSecond.compareTo(a.bitrate.bitsPerSecond);
+      });
+      
+      return audioStreams.first;
+    } catch (e) {
+      print('Error getting audio stream: $e');
+      return null;
+    }
+  }
+
+  /// Get the YoutubeExplode instance for direct stream access
+  YoutubeExplode get yt => _yt;
+
   /// Close the client
   void close() {
     _yt.close();

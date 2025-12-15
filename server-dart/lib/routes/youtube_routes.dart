@@ -100,86 +100,29 @@ Router youtubeRoutes(YouTubeService youtube) {
     }
   });
 
-  // Audio proxy endpoint - streams audio through our server
+  // Audio proxy endpoint - streams audio using youtube_explode's authenticated client
   router.get('/audio/<videoId>', (Request request, String videoId) async {
     print('🎧 Audio proxy request for: $videoId');
     
-    // Get the direct URL from cache or fetch it
-    String? directUrl = _streamUrlCache[videoId];
-    
-    if (directUrl == null) {
-      // Need to fetch the stream URL first
-      final streamData = await youtube.getStreamUrl(videoId);
-      if (streamData == null) {
-        return Response.notFound('Stream not found');
-      }
-      directUrl = streamData['url'] as String;
-      _streamUrlCache[videoId] = directUrl;
-    }
-
     try {
-      print('🔗 Proxying audio from YouTube CDN');
+      // Use youtube_explode's authenticated stream client to get audio bytes
+      final audioBytes = await youtube.getAudioBytes(videoId);
       
-      // Handle range requests for seeking
-      final rangeHeader = request.headers['range'];
-      final headers = <String, String>{
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      };
-      
-      if (rangeHeader != null) {
-        headers['Range'] = rangeHeader;
-        print('📍 Range request: $rangeHeader');
-      }
-      
-      // Make request to YouTube CDN
-      final response = await http.get(
-        Uri.parse(directUrl),
-        headers: headers,
-      );
-
-      if (response.statusCode != 200 && response.statusCode != 206) {
-        print('❌ YouTube CDN error: ${response.statusCode}');
-        // URL might be expired, try to refresh
-        final newStreamData = await youtube.getStreamUrl(videoId);
-        if (newStreamData != null) {
-          _streamUrlCache[videoId] = newStreamData['url'] as String;
-          // Retry with new URL
-          final retryResponse = await http.get(
-            Uri.parse(newStreamData['url'] as String),
-            headers: headers,
-          );
-          if (retryResponse.statusCode == 200 || retryResponse.statusCode == 206) {
-            return Response(
-              retryResponse.statusCode,
-              body: retryResponse.bodyBytes,
-              headers: {
-                'Content-Type': retryResponse.headers['content-type'] ?? 'audio/mp4',
-                'Accept-Ranges': 'bytes',
-                'Access-Control-Allow-Origin': '*',
-                if (retryResponse.headers['content-length'] != null)
-                  'Content-Length': retryResponse.headers['content-length']!,
-                if (retryResponse.headers['content-range'] != null)
-                  'Content-Range': retryResponse.headers['content-range']!,
-              },
-            );
-          }
-        }
-        return Response.internalServerError(body: 'Failed to proxy audio');
+      if (audioBytes == null || audioBytes.isEmpty) {
+        print('❌ Failed to get audio bytes for: $videoId');
+        return Response.internalServerError(body: 'Failed to get audio');
       }
 
-      print('✅ Proxying ${response.bodyBytes.length} bytes');
+      print('✅ Serving ${audioBytes.length} bytes of audio');
       
-      return Response(
-        response.statusCode,
-        body: response.bodyBytes,
+      return Response.ok(
+        audioBytes,
         headers: {
-          'Content-Type': response.headers['content-type'] ?? 'audio/mp4',
+          'Content-Type': 'audio/mp4',
+          'Content-Length': audioBytes.length.toString(),
           'Accept-Ranges': 'bytes',
           'Access-Control-Allow-Origin': '*',
-          if (response.headers['content-length'] != null)
-            'Content-Length': response.headers['content-length']!,
-          if (response.headers['content-range'] != null)
-            'Content-Range': response.headers['content-range']!,
+          'Cache-Control': 'public, max-age=3600',
         },
       );
     } catch (e, stack) {
