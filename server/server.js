@@ -278,44 +278,67 @@ app.get('/api/stream/:videoId', async (req, res) => {
         }
     }
 
-    try {
-        console.log(`\n🎵 Getting stream for: ${videoId}`)
+    // Use full YouTube URL to prevent video IDs starting with '-' being interpreted as options
+    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`
 
-        // Use full YouTube URL to prevent video IDs starting with '-' being interpreted as options
-        const videoUrl = `https://www.youtube.com/watch?v=${videoId}`
-        const args = [
-            '-f', 'bestaudio/best',
-            '--dump-json',
-            '--no-warnings',
-            videoUrl
-        ]
+    // Try multiple format options in order of preference
+    const formatOptions = [
+        'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio',
+        'bestaudio/best',
+        'worstaudio',  // Fallback to any audio
+        'best'         // Last resort: any format
+    ]
 
-        const output = await runYtDlp(args)
-        const data = JSON.parse(output)
+    for (const format of formatOptions) {
+        try {
+            console.log(`\n🎵 Getting stream for: ${videoId} (format: ${format})`)
 
-        if (!data.url) {
-            throw new Error('No stream URL found')
+            const args = [
+                '-f', format,
+                '--dump-json',
+                '--no-warnings',
+                '--no-playlist',
+                '--geo-bypass',
+                videoUrl
+            ]
+
+            const output = await runYtDlp(args, 45000) // 45 second timeout
+            const data = JSON.parse(output)
+
+            // Try to get URL from various possible locations
+            const streamUrl = data.url || data.urls?.[0] ||
+                data.requested_formats?.[0]?.url ||
+                data.formats?.find(f => f.acodec !== 'none')?.url
+
+            if (!streamUrl) {
+                console.warn(`⚠️ No URL found with format ${format}, trying next...`)
+                continue
+            }
+
+            const streamData = {
+                url: streamUrl,
+                title: data.title,
+                artist: data.uploader || data.channel || data.artist || 'Unknown Artist',
+                thumbnail: data.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+                duration: data.duration || 0
+            }
+
+            cache.stream.set(videoId, {
+                data: streamData,
+                timestamp: Date.now()
+            })
+
+            console.log(`✓ Stream found: ${streamData.title}`)
+            return res.json(streamData)
+        } catch (error) {
+            console.warn(`⚠️ Format ${format} failed: ${error.message}`)
+            // Continue to next format option
         }
-
-        const streamData = {
-            url: data.url,
-            title: data.title,
-            artist: data.uploader || data.artist || 'Unknown Artist',
-            thumbnail: data.thumbnail,
-            duration: data.duration
-        }
-
-        cache.stream.set(videoId, {
-            data: streamData,
-            timestamp: Date.now()
-        })
-
-        console.log(`✓ Stream found: ${streamData.title}`)
-        res.json(streamData)
-    } catch (error) {
-        console.error('Stream error:', error.message)
-        res.status(500).json({ error: 'Failed to get stream' })
     }
+
+    // All formats failed
+    console.error(`❌ All stream formats failed for: ${videoId}`)
+    res.status(500).json({ error: 'Failed to get stream - video may be unavailable' })
 })
 
 // Get related tracks
@@ -441,6 +464,40 @@ app.get('/api/suggestions', async (req, res) => {
 })
 
 // Synced Lyrics (LRCLIB)
+// Helper function to clean track title for better lyrics matching
+function cleanTrackTitle(title) {
+    return title
+        // Remove common YouTube suffixes
+        .replace(/\s*\(Official\s*(Music\s*)?Video\)/gi, '')
+        .replace(/\s*\(Official\s*Audio\)/gi, '')
+        .replace(/\s*\(Lyrics?\)/gi, '')
+        .replace(/\s*\(Lyric\s*Video\)/gi, '')
+        .replace(/\s*\[Official\s*(Music\s*)?Video\]/gi, '')
+        .replace(/\s*\[.*?Video.*?\]/gi, '')
+        .replace(/\s*\|.*$/g, '') // Remove everything after |
+        .replace(/\s*·.*$/g, '') // Remove everything after ·
+        .replace(/\s*HD\s*$/gi, '')
+        .replace(/\s*HQ\s*$/gi, '')
+        .replace(/\s*4K\s*$/gi, '')
+        .replace(/\s*\d{4}\s*$/g, '') // Remove year at end
+        // Remove emoji and special characters
+        .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
+        .replace(/[✨🎵🎶💫⭐🔥💯🎤🎧]/g, '')
+        // Clean up extra whitespace
+        .replace(/\s+/g, ' ')
+        .trim()
+}
+
+// Helper function to clean artist name
+function cleanArtistName(artist) {
+    return artist
+        .replace(/\s*-\s*Topic$/gi, '')
+        .replace(/\s*VEVO$/gi, '')
+        .replace(/\s*Official$/gi, '')
+        .replace(/\s*Music$/gi, '')
+        .trim()
+}
+
 app.get('/api/lyrics', async (req, res) => {
     const { track, artist, album, duration } = req.query
 
@@ -448,38 +505,65 @@ app.get('/api/lyrics', async (req, res) => {
         return res.status(400).json({ error: 'Track and artist are required' })
     }
 
-    try {
-        console.log(`\n🎤 Getting lyrics for: ${track} - ${artist}`)
+    // Clean the track and artist names for better matching
+    const cleanedTrack = cleanTrackTitle(track)
+    const cleanedArtist = cleanArtistName(artist)
 
+    console.log(`\n🎤 Getting lyrics for: "${cleanedTrack}" by "${cleanedArtist}"`)
+    console.log(`   (Original: "${track}" by "${artist}")`)
+
+    // Try exact match first
+    try {
         const params = new URLSearchParams({
-            artist_name: artist,
-            track_name: track,
+            artist_name: cleanedArtist,
+            track_name: cleanedTrack,
             album_name: album || '',
             duration: duration || ''
         })
 
         const response = await fetch(`https://lrclib.net/api/get?${params}`)
 
-        if (response.status === 404) {
-            console.log('❌ Lyrics not found')
-            return res.status(404).json({ error: 'Lyrics not found' })
+        if (response.ok) {
+            const data = await response.json()
+            console.log('✓ Lyrics found (exact match)')
+            return res.json({
+                syncedLyrics: data.syncedLyrics,
+                plainLyrics: data.plainLyrics,
+                instrumental: data.instrumental
+            })
         }
-
-        if (!response.ok) {
-            throw new Error(`LRCLIB error: ${response.status}`)
-        }
-
-        const data = await response.json()
-
-        res.json({
-            syncedLyrics: data.syncedLyrics,
-            plainLyrics: data.plainLyrics,
-            instrumental: data.instrumental
-        })
     } catch (error) {
-        console.error('Lyrics error:', error.message)
-        res.status(500).json({ error: 'Failed to get lyrics' })
+        console.warn('Exact match failed:', error.message)
     }
+
+    // Try search API as fallback
+    try {
+        console.log('🔍 Trying lyrics search...')
+        const searchQuery = `${cleanedTrack} ${cleanedArtist}`
+        const searchResponse = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(searchQuery)}`)
+
+        if (searchResponse.ok) {
+            const results = await searchResponse.json()
+
+            if (results && results.length > 0) {
+                // Get the first result with synced lyrics, or just the first result
+                const bestMatch = results.find(r => r.syncedLyrics) || results[0]
+                console.log(`✓ Lyrics found via search: "${bestMatch.trackName}" by "${bestMatch.artistName}"`)
+
+                return res.json({
+                    syncedLyrics: bestMatch.syncedLyrics,
+                    plainLyrics: bestMatch.plainLyrics,
+                    instrumental: bestMatch.instrumental
+                })
+            }
+        }
+    } catch (error) {
+        console.warn('Search fallback failed:', error.message)
+    }
+
+    // Nothing found
+    console.log('❌ Lyrics not found')
+    res.status(404).json({ error: 'Lyrics not found' })
 })
 
 // ========================================
