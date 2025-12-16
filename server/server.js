@@ -243,10 +243,10 @@ app.get('/api/search', async (req, res) => {
         const results = videos.map(video => ({
             id: video.id,
             videoId: video.id,
-            title: video.title.text || video.title,
-            artist: video.author.name || video.author,
-            thumbnail: video.thumbnails[0]?.url,
-            duration: video.duration.seconds || 0
+            title: video.title?.text || video.title || 'Unknown',
+            artist: video.author?.name || video.author || 'Unknown',
+            thumbnail: video.thumbnails?.[0]?.url,
+            duration: video.duration?.seconds || 0
         }))
 
         if (results.length > 0) {
@@ -352,11 +352,13 @@ app.get('/api/stream/:videoId', async (req, res) => {
     try {
         console.log(`🐢 Getting stream (yt-dlp) for: ${videoId}`)
 
+        // Use full YouTube URL to prevent video IDs starting with '-' being interpreted as options
+        const videoUrl = `https://www.youtube.com/watch?v=${videoId}`
         const args = [
             '-f', 'bestaudio/best',
             '--dump-json',
             '--no-warnings',
-            videoId
+            videoUrl
         ]
 
         const output = await runYtDlp(args)
@@ -401,10 +403,10 @@ app.get('/api/related/:videoId', async (req, res) => {
         const results = related.map(video => ({
             id: video.id,
             videoId: video.id,
-            title: video.title.text || video.title,
-            artist: video.author.name || video.author,
+            title: video.title?.text || video.title || 'Unknown',
+            artist: video.author?.name || video.author || 'Unknown',
             thumbnail: video.thumbnails?.[0]?.url,
-            duration: video.duration.seconds || 0
+            duration: video.duration?.seconds || 0
         })).filter(v => v.id) // Filter out non-video items
 
         if (results.length > 0) {
@@ -420,10 +422,11 @@ app.get('/api/related/:videoId', async (req, res) => {
         console.log(`🐢 Getting related (yt-dlp) for: ${videoId}`)
 
         // Get video info first to know what to search for
+        const videoUrl = `https://www.youtube.com/watch?v=${videoId}`
         const args = [
             '--dump-json',
             '--no-warnings',
-            videoId
+            videoUrl
         ]
 
         const output = await runYtDlp(args)
@@ -490,10 +493,10 @@ app.get('/api/trending', async (req, res) => {
             const results = videos.map(video => ({
                 id: video.id,
                 videoId: video.id,
-                title: video.title.text || video.title,
-                artist: video.author.name || video.author,
+                title: video.title?.text || video.title || 'Unknown',
+                artist: video.author?.name || video.author || 'Unknown',
                 thumbnail: video.thumbnails?.[0]?.url,
-                duration: video.duration.seconds || 0
+                duration: video.duration?.seconds || 0
             }))
 
             cache.trending = { data: results, timestamp: Date.now() }
