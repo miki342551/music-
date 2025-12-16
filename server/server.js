@@ -316,7 +316,20 @@ app.get('/api/stream/:videoId', async (req, res) => {
         const info = await yt.getBasicInfo(videoId)
 
         const format = info.chooseFormat({ type: 'audio', quality: 'best' })
-        const url = format.decipher(yt.session.player)
+
+        // Some formats have URL directly, others need deciphering
+        let url = null
+        if (format.url) {
+            // URL is already available, no deciphering needed
+            url = format.url
+        } else if (format.signatureCipher || format.cipher) {
+            // URL needs to be deciphered
+            try {
+                url = format.decipher(yt.session.player)
+            } catch (decipherError) {
+                console.warn('⚠️ Decipher failed:', decipherError.message)
+            }
+        }
 
         if (url) {
             const streamData = {
