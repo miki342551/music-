@@ -1,20 +1,22 @@
-/* ===== MONOCHROME PLAYER DESIGN ===== */
-.neo-player {
+/* ===== PIXEL-ACCURATE MODERN PLAYER ===== */
+
+/* Base Player Container */
+.player {
     position: fixed;
     inset: 0;
     z-index: 2000;
     display: flex;
     flex-direction: column;
-    background: #050505;
-    /* Deep black/grey */
-    padding: 0 24px;
-    padding-top: max(16px, env(safe-area-inset-top));
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    background: #0f0f0f;
+    padding: 0 20px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
     overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
 }
 
 /* Empty State */
-.neo-player-empty {
+.player-empty {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -24,175 +26,167 @@
     color: #666;
 }
 
-.neo-empty-icon {
+.empty-icon {
     font-size: 64px;
     margin-bottom: 24px;
     opacity: 0.5;
-    color: #fff;
 }
 
-.neo-player-empty h2 {
+.player-empty h2 {
     font-size: 20px;
     font-weight: 600;
     color: #fff;
     margin-bottom: 8px;
 }
 
-.neo-player-empty p {
+.player-empty p {
     font-size: 14px;
     color: #888;
 }
 
-/* Top Bar */
-.neo-top-bar {
+/* ===== TOP BAR ===== */
+.player-top-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 0;
-    margin-bottom: 20px;
+    padding: 8px 0;
+    margin-bottom: 12px;
 }
 
-.neo-icon-btn {
+.top-btn {
     width: 44px;
     height: 44px;
-    background: rgba(255, 255, 255, 0.1);
+    background: #1c1c1e;
     border: none;
-    border-radius: 50%;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: transform 0.15s ease, background 0.15s ease;
 }
 
-.neo-icon-btn:active {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(0.95);
+.top-btn:active {
+    transform: scale(0.92);
+    background: #2c2c2e;
 }
 
-.neo-now-playing {
-    font-size: 14px;
+.now-playing-text {
+    font-size: 15px;
     font-weight: 600;
     color: #fff;
-    letter-spacing: 0.5px;
+    letter-spacing: -0.2px;
 }
 
-/* Album Art */
-.neo-album-container {
+/* ===== ALBUM ART ===== */
+.album-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 10px 0 30px;
     flex: 1;
-    /* Allow it to take available space */
+    padding: 16px 0;
+    min-height: 0;
 }
 
-.neo-album-art {
+.album-art {
     width: 100%;
-    max-width: 320px;
+    max-width: min(70vw, 320px);
     aspect-ratio: 1;
     object-fit: cover;
-    border-radius: 24px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    border-radius: 16px;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Track Info Card - The "Pill" */
-.neo-track-card {
+/* ===== TRACK INFO CARD (Pill) ===== */
+.track-card {
     display: flex;
     align-items: center;
-    gap: 16px;
-    background: #1A1A1A;
-    /* Dark grey pill background */
-    border-radius: 16px;
-    padding: 12px 16px;
-    margin-bottom: 32px;
-    width: 100%;
+    gap: 12px;
+    background: #1c1c1e;
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
 }
 
-.neo-track-thumb {
-    display: block;
-    /* Show thumb in pill */
-    width: 48px;
-    height: 48px;
+.track-thumb {
+    width: 44px;
+    height: 44px;
     border-radius: 8px;
     object-fit: cover;
+    flex-shrink: 0;
 }
 
-.neo-track-info {
+.track-info {
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    align-items: flex-start;
-    /* Left align */
-    text-align: left;
+    gap: 2px;
 }
 
-.neo-track-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-}
-
-.neo-track-artist {
-    font-size: 14px;
-    color: #aaa;
+.track-artist {
+    font-size: 13px;
+    color: #8e8e93;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 100%;
 }
 
-.neo-follow-btn {
-    display: block;
-    /* Show follow button */
-    background: rgba(255, 255, 255, 0.1);
+.track-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.follow-btn {
+    background: #2c2c2e;
     color: #fff;
     border: none;
     padding: 8px 16px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    white-space: nowrap;
+    transition: background 0.15s ease, transform 0.15s ease;
+    flex-shrink: 0;
 }
 
-.neo-follow-btn:active {
-    background: rgba(255, 255, 255, 0.2);
+.follow-btn:active {
+    background: #3c3c3e;
+    transform: scale(0.95);
 }
 
-/* Progress Bar */
-.neo-progress-section {
-    margin-bottom: 40px;
-    padding: 0 8px;
+/* ===== PROGRESS BAR ===== */
+.progress-section {
+    margin-bottom: 24px;
+    padding: 0 4px;
 }
 
-.neo-progress-bar {
+.progress-bar {
     height: 4px;
-    background: rgba(255, 255, 255, 0.15);
+    background: #3a3a3c;
     border-radius: 2px;
     cursor: pointer;
     position: relative;
     overflow: visible;
 }
 
-.neo-progress-fill {
+.progress-fill {
     height: 100%;
     background: #fff;
-    /* White */
     border-radius: 2px;
     position: relative;
+    transition: width 0.1s linear;
 }
 
-/* Progress Thumb */
-.neo-progress-fill::after {
+.progress-fill::after {
     content: '';
     position: absolute;
     right: -6px;
@@ -202,35 +196,34 @@
     height: 12px;
     background: #fff;
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.neo-time {
+.time-display {
     display: flex;
     justify-content: space-between;
-    margin-top: 10px;
+    margin-top: 8px;
     font-size: 12px;
-    color: #888;
+    color: #8e8e93;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
 }
 
-/* Control Pad Area */
-.neo-controls-area {
+/* ===== MAIN CONTROLS AREA ===== */
+.controls-area {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
-    margin-bottom: 40px;
-    padding: 0 16px;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 0 8px;
 }
 
 /* Side Buttons (More, Queue) */
-.neo-side-btn {
-    width: 56px;
-    height: 56px;
-    background: #1A1A1A;
-    /* Dark grey circle */
+.side-btn {
+    width: 52px;
+    height: 52px;
+    background: #1c1c1e;
     border: none;
     border-radius: 50%;
     display: flex;
@@ -238,100 +231,109 @@
     justify-content: center;
     color: #fff;
     cursor: pointer;
-    transition: transform 0.2s ease;
+    transition: transform 0.15s ease, background 0.15s ease;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.neo-side-btn:active {
-    transform: scale(0.95);
-    background: #2a2a2a;
+.side-btn:active {
+    transform: scale(0.92);
+    background: #2c2c2e;
 }
 
-.neo-side-btn svg {
-    width: 24px;
-    height: 24px;
-}
-
-/* Circular Control Pad */
-.neo-control-pad {
+/* ===== CIRCULAR CONTROL PAD ===== */
+.control-pad {
     position: relative;
-    width: 220px;
-    height: 220px;
-    background: #111;
-    /* Very dark grey pad */
+    width: 200px;
+    height: 200px;
+    background: #1c1c1e;
     border-radius: 50%;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Pad Direction Buttons */
-.neo-pad-btn {
+.pad-btn {
     position: absolute;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     background: transparent;
     border: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #888;
-    cursor: pointer;
-    transition: color 0.2s ease;
-}
-
-.neo-pad-btn:active {
     color: #fff;
-    transform: scale(0.9);
+    cursor: pointer;
+    transition: transform 0.15s ease, color 0.15s ease;
 }
 
-.neo-pad-btn svg {
-    width: 20px;
-    height: 20px;
+.pad-btn:active {
+    transform: scale(0.9);
+    color: #8e8e93;
 }
 
 /* Heart Button */
-.neo-pad-btn.liked {
-    color: #ef4444;
-    /* Red heart */
+.pad-btn.liked {
+    color: #ff375f;
 }
 
-.neo-pad-btn.liked svg {
-    fill: #ef4444;
+.pad-btn.liked svg {
+    fill: #ff375f;
 }
 
-/* Position buttons */
-.neo-pad-top {
-    top: 20px;
+/* Position buttons around the pad */
+.pad-top {
+    top: 16px;
     left: 50%;
     transform: translateX(-50%);
 }
 
-.neo-pad-left {
-    left: 20px;
+.pad-top:active {
+    transform: translateX(-50%) scale(0.9);
+}
+
+.pad-left {
+    left: 16px;
     top: 50%;
     transform: translateY(-50%);
 }
 
-.neo-pad-right {
-    right: 20px;
+.pad-left:active {
+    transform: translateY(-50%) scale(0.9);
+}
+
+.pad-right {
+    right: 16px;
     top: 50%;
     transform: translateY(-50%);
 }
 
-.neo-pad-bottom {
-    bottom: 20px;
+.pad-right:active {
+    transform: translateY(-50%) scale(0.9);
+}
+
+.pad-bottom {
+    bottom: 16px;
     left: 50%;
     transform: translateX(-50%);
 }
 
-/* Center Play Button */
-.neo-play-btn {
+.pad-bottom:active {
+    transform: translateX(-50%) scale(0.9);
+}
+
+/* ===== CENTER PLAY BUTTON ===== */
+.play-btn {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 72px;
     height: 72px;
-    background: #2a2a2a;
-    /* Lighter grey circle */
+    background: #2c2c2e;
     border: none;
     border-radius: 50%;
     display: flex;
@@ -339,25 +341,31 @@
     justify-content: center;
     color: #fff;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s ease;
+    transition: transform 0.15s ease, background 0.15s ease;
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.neo-play-btn:active {
-    transform: translate(-50%, -50%) scale(0.95);
-    background: #333;
+.play-btn:active {
+    transform: translate(-50%, -50%) scale(0.92);
+    background: #3c3c3e;
 }
 
-.neo-play-btn svg {
-    width: 32px;
-    height: 32px;
+.play-btn svg {
     fill: #fff;
+    margin-left: 3px;
 }
 
-.neo-spinner {
+.play-btn:disabled {
+    opacity: 0.6;
+}
+
+/* Spinner */
+.spinner {
     width: 24px;
     height: 24px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
+    border: 3px solid rgba(255, 255, 255, 0.15);
     border-top-color: #fff;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -369,54 +377,181 @@
     }
 }
 
-/* Secondary Controls (Hidden in this view based on image, but keeping for functionality) */
-.neo-secondary-controls {
-    display: none;
-    /* Hiding to match image exactly */
+/* ===== SECONDARY CONTROLS ===== */
+.secondary-controls {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 60px;
+    margin-bottom: 12px;
 }
 
-/* Home Indicator */
-.neo-home-indicator {
+.secondary-btn {
+    width: 48px;
+    height: 48px;
+    background: #1c1c1e;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8e8e93;
+    cursor: pointer;
+    transition: transform 0.15s ease, color 0.15s ease, background 0.15s ease;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.secondary-btn:active {
+    transform: scale(0.92);
+    background: #2c2c2e;
+}
+
+.secondary-btn.active {
+    color: #fff;
+    background: #2c2c2e;
+}
+
+/* ===== HOME INDICATOR ===== */
+.home-indicator {
     width: 134px;
     height: 5px;
     background: rgba(255, 255, 255, 0.2);
     border-radius: 100px;
     align-self: center;
     margin-top: auto;
-    margin-bottom: 8px;
 }
 
-/* Responsive Adjustments */
-@media (max-height: 750px) {
-    .neo-album-container {
-        padding: 4px 0 16px;
+/* ===== LYRICS OVERLAY ===== */
+.lyrics-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
     }
 
-    .neo-album-art {
-        max-width: 260px;
+    to {
+        opacity: 1;
+    }
+}
+
+.lyrics-content {
+    max-height: 100%;
+    overflow-y: auto;
+    text-align: center;
+    -webkit-overflow-scrolling: touch;
+}
+
+.lyric-line {
+    font-size: 24px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.3);
+    margin: 16px 0;
+    transition: color 0.3s ease, transform 0.3s ease;
+    line-height: 1.4;
+}
+
+.lyric-line.active {
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.lyrics-plain {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.8;
+    white-space: pre-wrap;
+}
+
+.lyrics-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: #8e8e93;
+}
+
+/* ===== RESPONSIVE ADJUSTMENTS ===== */
+@media (max-height: 700px) {
+    .album-container {
+        padding: 8px 0;
     }
 
-    .neo-track-card {
-        margin-bottom: 24px;
-        padding: 10px 14px;
+    .album-art {
+        max-width: min(60vw, 240px);
     }
 
-    .neo-control-pad {
-        width: 180px;
-        height: 180px;
+    .track-card {
+        margin-bottom: 16px;
+        padding: 8px 12px;
     }
 
-    .neo-play-btn {
+    .track-thumb {
+        width: 40px;
+        height: 40px;
+    }
+
+    .control-pad {
+        width: 170px;
+        height: 170px;
+    }
+
+    .play-btn {
         width: 60px;
         height: 60px;
     }
 
-    .neo-controls-area {
-        margin-bottom: 24px;
+    .side-btn {
+        width: 46px;
+        height: 46px;
     }
 
-    .neo-side-btn {
-        width: 52px;
-        height: 52px;
+    .progress-section {
+        margin-bottom: 16px;
+    }
+
+    .controls-area {
+        margin-bottom: 12px;
+    }
+
+    .secondary-controls {
+        padding: 0 40px;
+        margin-bottom: 8px;
+    }
+
+    .secondary-btn {
+        width: 42px;
+        height: 42px;
+    }
+}
+
+@media (min-height: 850px) {
+    .album-art {
+        max-width: min(75vw, 360px);
+    }
+
+    .control-pad {
+        width: 220px;
+        height: 220px;
+    }
+
+    .play-btn {
+        width: 80px;
+        height: 80px;
+    }
+
+    .side-btn {
+        width: 56px;
+        height: 56px;
     }
 }
