@@ -1,12 +1,12 @@
-/* ===== NEUMORPHIC PLAYER - OLEDBLACK & GOLD ===== */
+/* ===== MONOCHROME PLAYER DESIGN ===== */
 .neo-player {
     position: fixed;
     inset: 0;
     z-index: 2000;
     display: flex;
     flex-direction: column;
-    background: #000000;
-    /* Pure OLED Black */
+    background: #050505;
+    /* Deep black/grey */
     padding: 0 24px;
     padding-top: max(16px, env(safe-area-inset-top));
     padding-bottom: max(16px, env(safe-area-inset-bottom));
@@ -28,8 +28,7 @@
     font-size: 64px;
     margin-bottom: 24px;
     opacity: 0.5;
-    color: #D4AF37;
-    /* Gold */
+    color: #fff;
 }
 
 .neo-player-empty h2 {
@@ -49,41 +48,34 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 0;
-    margin-bottom: 16px;
+    padding: 12px 0;
+    margin-bottom: 20px;
 }
 
 .neo-icon-btn {
-    width: 48px;
-    height: 48px;
-    background: #111;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    box-shadow: none;
-    /* Minimalist */
+    transition: background 0.2s ease;
 }
 
 .neo-icon-btn:active {
+    background: rgba(255, 255, 255, 0.2);
     transform: scale(0.95);
-    background: #222;
-    border-color: #D4AF37;
-    /* Gold border on press */
-    color: #D4AF37;
 }
 
 .neo-now-playing {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
-    color: #D4AF37;
-    /* Gold */
-    letter-spacing: 1px;
-    text-transform: uppercase;
+    color: #fff;
+    letter-spacing: 0.5px;
 }
 
 /* Album Art */
@@ -91,38 +83,40 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 8px 0 24px;
+    padding: 10px 0 30px;
+    flex: 1;
+    /* Allow it to take available space */
 }
 
 .neo-album-art {
     width: 100%;
-    max-width: 280px;
+    max-width: 320px;
     aspect-ratio: 1;
     object-fit: cover;
-    border-radius: 20px;
-    box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.8),
-        /* Deep shadow */
-        0 0 0 1px rgba(255, 255, 255, 0.05);
-    /* Subtle border */
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
 }
 
-/* Track Info Card */
+/* Track Info Card - The "Pill" */
 .neo-track-card {
     display: flex;
     align-items: center;
-    gap: 14px;
-    background: transparent;
-    /* Minimalist - remove card bg */
-    border: none;
-    padding: 0 14px;
-    margin-bottom: 24px;
-    box-shadow: none;
+    gap: 16px;
+    background: #1A1A1A;
+    /* Dark grey pill background */
+    border-radius: 16px;
+    padding: 12px 16px;
+    margin-bottom: 32px;
+    width: 100%;
 }
 
 .neo-track-thumb {
-    display: none;
-    /* Hide thumb in main player for cleaner look */
+    display: block;
+    /* Show thumb in pill */
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
 }
 
 .neo-track-info {
@@ -131,47 +125,59 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    align-items: center;
-    /* Center text */
-    text-align: center;
-}
-
-.neo-track-artist {
-    font-size: 14px;
-    color: #D4AF37;
-    /* Gold */
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    align-items: flex-start;
+    /* Left align */
+    text-align: left;
 }
 
 .neo-track-title {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 700;
     color: #fff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    letter-spacing: -0.5px;
+    width: 100%;
+}
+
+.neo-track-artist {
+    font-size: 14px;
+    color: #aaa;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
 }
 
 .neo-follow-btn {
-    display: none;
-    /* Hide follow button for minimalism */
+    display: block;
+    /* Show follow button */
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.neo-follow-btn:active {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* Progress Bar */
 .neo-progress-section {
-    margin-bottom: 32px;
-    padding: 0 12px;
+    margin-bottom: 40px;
+    padding: 0 8px;
 }
 
 .neo-progress-bar {
-    height: 2px;
-    /* Ultra thin */
-    background: #222;
-    border-radius: 1px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
     cursor: pointer;
     position: relative;
     overflow: visible;
@@ -179,34 +185,32 @@
 
 .neo-progress-fill {
     height: 100%;
-    background: #D4AF37;
-    /* Gold */
-    border-radius: 1px;
+    background: #fff;
+    /* White */
+    border-radius: 2px;
     position: relative;
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-    /* Gold glow */
 }
 
 /* Progress Thumb */
 .neo-progress-fill::after {
     content: '';
     position: absolute;
-    right: -4px;
+    right: -6px;
     top: 50%;
     transform: translateY(-50%);
-    width: 8px;
-    height: 8px;
+    width: 12px;
+    height: 12px;
     background: #fff;
     border-radius: 50%;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .neo-time {
     display: flex;
     justify-content: space-between;
-    margin-top: 8px;
-    font-size: 11px;
-    color: #666;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #888;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
 }
@@ -216,134 +220,109 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 20px;
+    margin-bottom: 40px;
+    padding: 0 16px;
 }
 
-/* Side Buttons - Enhanced */
+/* Side Buttons (More, Queue) */
 .neo-side-btn {
     width: 56px;
     height: 56px;
-    background: #0a0a0a;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #1A1A1A;
+    /* Dark grey circle */
+    border: none;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #666;
+    color: #fff;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease;
 }
 
 .neo-side-btn:active {
-    transform: scale(0.9);
-    color: #fff;
-    background: #111;
-    border-color: rgba(255, 255, 255, 0.1);
+    transform: scale(0.95);
+    background: #2a2a2a;
 }
 
 .neo-side-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
 }
 
-/* Circular Control Pad - Enhanced */
+/* Circular Control Pad */
 .neo-control-pad {
     position: relative;
-    width: 200px;
-    height: 200px;
-    background: #050505;
+    width: 220px;
+    height: 220px;
+    background: #111;
+    /* Very dark grey pad */
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.03);
-    box-shadow:
-        0 0 40px rgba(0, 0, 0, 0.8),
-        inset 0 0 20px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
-/* Pad Direction Buttons - Enhanced */
+/* Pad Direction Buttons */
 .neo-pad-btn {
     position: absolute;
-    width: 48px;
-    height: 48px;
-    background: #111;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #888;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease;
 }
 
 .neo-pad-btn:active {
-    color: #D4AF37;
-    /* Gold */
+    color: #fff;
     transform: scale(0.9);
-    background: #1a1a1a;
-    border-color: rgba(212, 175, 55, 0.2);
 }
 
 .neo-pad-btn svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
 }
 
-/* Heart Button - Special */
+/* Heart Button */
 .neo-pad-btn.liked {
-    color: #D4AF37;
-    /* Gold */
-    background: rgba(212, 175, 55, 0.1);
-    border-color: rgba(212, 175, 55, 0.3);
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+    color: #ef4444;
+    /* Red heart */
 }
 
 .neo-pad-btn.liked svg {
-    fill: #D4AF37;
+    fill: #ef4444;
 }
 
-/* Position buttons around the circle */
+/* Position buttons */
 .neo-pad-top {
-    top: 10px;
+    top: 20px;
     left: 50%;
     transform: translateX(-50%);
-}
-
-.neo-pad-top:active {
-    transform: translateX(-50%) scale(0.9);
 }
 
 .neo-pad-left {
-    left: 10px;
+    left: 20px;
     top: 50%;
     transform: translateY(-50%);
-}
-
-.neo-pad-left:active {
-    transform: translateY(-50%) scale(0.9);
 }
 
 .neo-pad-right {
-    right: 10px;
+    right: 20px;
     top: 50%;
     transform: translateY(-50%);
 }
 
-.neo-pad-right:active {
-    transform: translateY(-50%) scale(0.9);
-}
-
 .neo-pad-bottom {
-    bottom: 10px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
 }
 
-.neo-pad-bottom:active {
-    transform: translateX(-50%) scale(0.9);
-}
-
-/* Center Play Button - Main Focus */
+/* Center Play Button */
 .neo-play-btn {
     position: absolute;
     top: 50%;
@@ -351,37 +330,35 @@
     transform: translate(-50%, -50%);
     width: 72px;
     height: 72px;
-    background: #D4AF37;
-    /* Gold */
+    background: #2a2a2a;
+    /* Lighter grey circle */
     border: none;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #000;
-    /* Black icon on gold */
+    color: #fff;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
 }
 
 .neo-play-btn:active {
-    transform: translate(-50%, -50%) scale(0.9);
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+    transform: translate(-50%, -50%) scale(0.95);
+    background: #333;
 }
 
 .neo-play-btn svg {
-    width: 28px;
-    height: 28px;
-    margin-left: 2px;
-    fill: #000;
+    width: 32px;
+    height: 32px;
+    fill: #fff;
 }
 
 .neo-spinner {
     width: 24px;
     height: 24px;
-    border: 3px solid rgba(0, 0, 0, 0.1);
-    border-top-color: #000;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #fff;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -392,68 +369,36 @@
     }
 }
 
-/* Secondary Controls - Enhanced */
+/* Secondary Controls (Hidden in this view based on image, but keeping for functionality) */
 .neo-secondary-controls {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 32px;
-    margin-bottom: 16px;
-}
-
-.neo-secondary-btn {
-    width: 48px;
-    height: 48px;
-    background: transparent;
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #666;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.neo-secondary-btn:active {
-    transform: scale(0.9);
-    color: #fff;
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.neo-secondary-btn.active {
-    color: #D4AF37;
-    /* Gold */
-    background: rgba(212, 175, 55, 0.05);
-}
-
-.neo-secondary-btn svg {
-    width: 20px;
-    height: 20px;
+    display: none;
+    /* Hiding to match image exactly */
 }
 
 /* Home Indicator */
 .neo-home-indicator {
     width: 134px;
     height: 5px;
-
-    .neo-play-btn {
-        width: 88px;
-        height: 88px;
-    }
-
-    .neo-pad-btn {
-        width: 54px;
-        height: 54px;
-    }
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 100px;
+    align-self: center;
+    margin-top: auto;
+    margin-bottom: 8px;
 }
 
-@media (max-height: 700px) {
+/* Responsive Adjustments */
+@media (max-height: 750px) {
     .neo-album-container {
         padding: 4px 0 16px;
     }
 
     .neo-album-art {
-        max-width: 220px;
+        max-width: 260px;
+    }
+
+    .neo-track-card {
+        margin-bottom: 24px;
+        padding: 10px 14px;
     }
 
     .neo-control-pad {
@@ -462,25 +407,12 @@
     }
 
     .neo-play-btn {
-        width: 68px;
-        height: 68px;
-    }
-
-    .neo-pad-btn {
-        width: 42px;
-        height: 42px;
-    }
-
-    .neo-track-card {
-        margin-bottom: 12px;
-    }
-
-    .neo-progress-section {
-        margin-bottom: 16px;
+        width: 60px;
+        height: 60px;
     }
 
     .neo-controls-area {
-        margin-bottom: 16px;
+        margin-bottom: 24px;
     }
 
     .neo-side-btn {
