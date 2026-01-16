@@ -670,4 +670,18 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`📍 Mode: yt-dlp + Last.fm`)
     console.log(`📂 yt-dlp path: ${YT_DLP_PATH}`)
     console.log(`\n✓ Ready to serve requests\n`)
+
+    // Keep-alive: Ping self every 14 minutes to prevent Render free tier spin-down
+    const RENDER_URL = process.env.RENDER_EXTERNAL_URL
+    if (RENDER_URL) {
+        console.log(`🔄 Keep-alive enabled for: ${RENDER_URL}`)
+        setInterval(async () => {
+            try {
+                await fetch(`${RENDER_URL}/api/health`)
+                console.log('💓 Keep-alive ping sent')
+            } catch (err) {
+                console.log('⚠️ Keep-alive ping failed:', err.message)
+            }
+        }, 14 * 60 * 1000) // Every 14 minutes
+    }
 })

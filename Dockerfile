@@ -24,13 +24,13 @@ RUN npm install --omit=dev
 # Copy server code from server folder
 COPY server/ .
 
-# Expose port
-EXPOSE 3001
+# Expose port (Render uses PORT env variable, defaults to 10000)
+EXPOSE 10000
 
 # Set environment variable for yt-dlp path
 ENV YT_DLP_PATH=/usr/local/bin/yt-dlp
 ENV NODE_ENV=production
-ENV PORT=3001
+# Note: Don't set PORT here - let Render set it via environment variable
 
 # Start server
 CMD ["node", "server.js"]
